@@ -61,6 +61,15 @@ function($, Backbone, _, _s, Util, FiltersUtil, FacetsUtil, SerializationUtil){
         });
     });
 
+    // Add hook for deserializing quantity field.
+    deserializeConfigStateHooks.push(function(configState, deserializedState){
+      if (! configState.qField){
+        return;
+      }
+      qFieldModel = new Backbone.Model(_.extend({}, configState.qField));
+      deserializedState.qField = qFieldModel;
+    });
+
     // Deserialize state from a config-style serialized state.
     // This is used for initializing the app when no state is passed.
     var deserializeConfigState = function(configState){

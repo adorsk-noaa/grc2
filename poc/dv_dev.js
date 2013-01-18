@@ -6,28 +6,36 @@ require(
 ],
 function($, DataViewCss, DataView){
 
+  GeoRefine = {};
+  GeoRefine.app = {
+    requestsEndpoint: "http://localhost:8000/georefine/projects/execute_requests/42/"
+  }
+
+
   var dvConfig = {
-    qField: {
-      id: 'a',
-      format: '%.1s',
-      inner_query: {
-        SELECT: [
-          {ID: 'a_sum', EXPRESSION: 'func.sum(__result__a)'}
-        ]
-      },
-      label: 'A',
-      outer_query: {
-        SELECT: [
-          {ID: 'a_sum', EXPRESSION: '__inner__a_sum'}
-        ]
-      },
-      value_type: 'numeric'
-    },
-    filterGroups: [
-      {id: 'fg1'},
-      {id: 'fg2'}
-    ],
     defaultInitialState: {
+      qField: {
+        id: 'a',
+        format: '%.1s',
+        inner_query: {
+          SELECT: [
+            {ID: 'a_sum', EXPRESSION: 'func.sum(__result__a)'}
+          ]
+        },
+        label: 'A',
+        outer_query: {
+          SELECT: [
+            {ID: 'a_sum', EXPRESSION: '__inner__a_sum'}
+          ]
+        },
+        value_type: 'numeric'
+      },
+
+      filterGroups: [
+        {id: 'scenario'},
+        {id: 'data'}
+      ],
+
       facetsEditor: {
         predefined_facets: {
           timestep: {

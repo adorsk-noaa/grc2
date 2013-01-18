@@ -4,11 +4,12 @@ define([
        './SummaryBar',
        './util/actions',
        './util/facets',
+       './util/filters',
        './util/summaryBar',
        './util/state',
        'text!./templates/DataView.html'
 ],
-function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, SummaryBarUtil, StateUtil, DataViewTemplate){
+function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, DataViewTemplate){
 
   var DataView = Backbone.View.extend({
 
@@ -43,9 +44,9 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, SummaryBarUtil, S
       stateDeferred.then(function(){
         _this.initialRender();
 
+        _this.qField = _this.state.qField;
         _this.setupFilterGroups();
         _this.setupWidgets();
-        _this.setupInitialState();
 
         _this.setupActionHandlers();
 
@@ -64,40 +65,14 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, SummaryBarUtil, S
       var _this = this;
       // Initialize filter groups...maybe move this into state deserialize
       // later.
-      _this.filterGroups = {};
+      _this.filterGroups = _this.state.filterGroups;
       _.each(_this.config.filterGroups, function(filterGroupDef){
         var filterGroup = new Backbone.Collection();
         _this.filterGroups[filterGroupDef.id] = filterGroup;
       });
 
-      _.each(_this.filterGroups, function(filterGroup, filterGroupId){
-        // Define getFilters method for each group.
-        filterGroup.getFilters = function(){
-          var filters = [];
-          _.each(filterGroup.models, function(model){
-            var modelFilters = model.get('filters');
-            if (modelFilters){
-              filters.push({
-                'source': {
-                  'type': model.getFilterType ? model.getFilterType() : null,
-                  'id': model.id
-                },
-                'filters': modelFilters
-              });
-            }
-          });
-          return filters;
-        };
-
-        // Add registration function to set id on new members, for
-        // determining filter sources w/in the group.
-        filterGroup.on('add', function(model){
-          var filterGroupIds = model.get("filterGroupIds") || {};
-          if (! filterGroupIds[filterGroupId]){
-            filterGroupIds[filterGroupId] = Date.now() + Math.random();
-          }
-          model.set("filterGroupIds", filterGroupIds);
-        });
+      _.each(_this.filterGroups, function(filterGroup){
+        FiltersUtil.decorateFilterGroup(filterGroup);
       });
     },
 

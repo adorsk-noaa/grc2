@@ -2,172 +2,484 @@ define([
        'underscore',
        'Facets/views/facet_collection',
        'Facets/views/facetsEditor',
+       './functions',
+       './filters',
 ],
-function(_, FacetCollectionView, FacetsEditorView){
+function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
 
-    var createFacetsEditor = function(opts){
-      opts = opts || {};
-      var facetsEditorModel = opts.model || new Backbone.Model();
-      // Use a customized FacetCollectionView which adds a token
-      // formatter to each facet view class.
-      // This allows us to do things like adding in the project's
-      // static dir to a url.
-      var GRFacetCollectionView = FacetCollectionView.extend({
-        getFacetViewClass: function(){
-          BaseFacetClass = FacetCollectionView.prototype.getFacetViewClass.apply(this, arguments);
-          GRFacetClass = BaseFacetClass.extend({
-            formatter: function(){
-              var orig = BaseFacetClass.prototype.formatter.apply(this, arguments);
-              // @TODO
-              return orig;
-              //return formatUtil.GeoRefineTokenFormatter(orig);
+  var createFacetsEditor = function(opts){
+    opts = opts || {};
+    var facetsEditorModel = opts.model || new Backbone.Model();
+    // Use a customized FacetCollectionView which adds a token
+    // formatter to each facet view class.
+    // This allows us to do things like adding in the project's
+    // static dir to a url.
+    var GRFacetCollectionView = FacetCollectionView.extend({
+      getFacetViewClass: function(){
+        BaseFacetClass = FacetCollectionView.prototype.getFacetViewClass.apply(this, arguments);
+        GRFacetClass = BaseFacetClass.extend({
+          formatter: function(){
+            var orig = BaseFacetClass.prototype.formatter.apply(this, arguments);
+            // @TODO
+            return orig;
+            //return formatUtil.GeoRefineTokenFormatter(orig);
+          }
+        });
+        return GRFacetClass;
+      }
+    });
+
+    // Use a customized facets editor class.
+    var GRFacetsEditorView = FacetsEditorView.extend({
+      formatter: function(){
+        var orig = FacetsEditorView.prototype.formatter.apply(this, arguments);
+        // @TODO
+        return orig;
+        //return formatUtil.GeoRefineTokenFormatter(orig);
+      },
+      getFacetCollectionViewClass: function(){
+        return GRFacetCollectionView;
+      }
+    });
+
+    // Create facets editor view.
+    var facetsEditorView = new GRFacetsEditorView({
+      el: opts.el,
+      model: facetsEditorModel,
+    });
+
+    // Setup facet collection view.
+    var facetCollectionView = facetsEditorView.subViews.facets;
+    // Initialize and connect initial facets.
+    _.each(facetCollectionView.registry, function(facetView, id){
+      initializeFacet(facetView, {filterGroups: opts.filterGroups});
+      connectFacet(facetView);
+    });
+    // Disconnect facets when removed.
+    facetCollectionView.on('removeFacetView', function(view){
+      disconnectFacet(view)
+    });
+
+    return facetsEditorView;
+  };
+
+  // Define postInitialize hook.
+  var facetsEditor_postInitialize = function(opts){
+    var facetsEditor = opts.facetsEditor;
+
+    // Initialize and connect newly created facets.
+    var facetCollectionView = facetsEditor.subViews.facets;
+    if (facetCollectionView){
+      facetCollectionView.on('addFacetView', function(view){
+        initializeFacet(view, {filterGroups: opts.filterGroups});
+        connectFacet(view);
+        if(view.model.getData){
+          var opts = {};
+          if (view.model.get('type') == 'numeric'){
+            opts.updateRange = true;
+          }
+          view.model.getData(opts);
+        }
+      });
+    }
+
+    facetsEditor.trigger('ready');
+  };
+
+  /**
+   * Define functions for decorating facets.
+   **/
+  var facetDecorators = {};
+  facetDecorators['numeric'] = function(numericFacet){
+    var model = numericFacet.model;
+    model.getData = function(opts){
+      // 'this' is a numeric facet model.
+      var _this = this;
+      var opts = opts || {updateRange: false};
+
+      var qfield  = _this.get('quantity_field');
+      if (! qfield){
+        return;
+      }
+
+      // Copy the key entity.
+      var key = JSON.parse(JSON.stringify(_this.get('KEY')));
+
+      // Set base filters on key entity context.
+      if (! key['KEY_ENTITY']['CONTEXT']){
+        key['KEY_ENTITY']['CONTEXT'] = {};
+      }
+      var key_context = key['KEY_ENTITY']['CONTEXT'];
+
+      requestsUtil.addFiltersToQuery(_this, ['base_filters'], key_context);
+
+      // Get the base query.
+      var base_inner_q = requestsUtil.makeKeyedInnerQuery(_this, key, ['base_filters']);
+      var base_outer_q = requestsUtil.makeKeyedOuterQuery(_this, key, base_inner_q, 'base');
+
+      // Get the primary query.
+      var primary_inner_q = requestsUtil.makeKeyedInnerQuery(_this, key, ['base_filters', 'primary_filters']);
+      var primary_outer_q = requestsUtil.makeKeyedOuterQuery(_this, key, primary_inner_q, 'primary');
+
+      // Assemble the keyed result parameters.
+      var keyed_results_parameters = {
+        "KEY": key,
+        "QUERIES": [base_outer_q, primary_outer_q]
+      };
+
+      // Assemble keyed query request.
+      var keyed_query_request = {
+        'ID': 'keyed_results',
+        'REQUEST': 'execute_keyed_queries',
+        'PARAMETERS': keyed_results_parameters
+      };
+
+      // Assemble request.
+      var requests = [keyed_query_request];
+
+      // Start the request and save the deferred object.
+      var deferred = $.ajax({
+        url: GeoRefine.app.requestsEndpoint,
+        type: 'POST',
+        data: {
+          'requests': JSON.stringify(requests)
+        },
+        success: function(data, status, xhr){
+          var results = data.results;
+          var count_entity = qfield.get('outer_query')['SELECT'][0];
+
+          // Parse data into histograms.
+          var base_histogram = [];
+          var primary_histogram = [];
+
+          // Generate choices from data.
+          var choices = [];
+          _.each(results['keyed_results'], function(result){
+            var bucketLabel = result['label'];
+            var bminmax = FunctionsUtil.parseBucketLabel(bucketLabel);
+
+            if (result['data']['base']){
+              var base_bucket = {
+                bucket: bucketLabel,
+                min: bminmax.min,
+                max: bminmax.max,
+                count: result['data']['base'][count_entity['ID']]
+              };
+              base_histogram.push(base_bucket);
+
+              // Get primary count (if present).
+              var primary_count = 0.0;
+              if (result['data'].hasOwnProperty('primary')){
+                var primary_count = result['data']['primary'][count_entity['ID']];
+              }
+              var primary_bucket = _.extend({}, base_bucket, {
+                count: primary_count
+              });
+              primary_histogram.push(primary_bucket);
             }
           });
-          return GRFacetClass;
+
+          base_histogram = _.sortBy(base_histogram, function(b){return b.count});
+          primary_histogram = _.sortBy(primary_histogram, function(b){return b.count;});
+
+          _this.set({
+            base_histogram: base_histogram,
+            filtered_histogram: primary_histogram,
+          });
         }
       });
 
-      // Use a customized facets editor class.
-      var GRFacetsEditorView = FacetsEditorView.extend({
-        formatter: function(){
-          var orig = FacetsEditorView.prototype.formatter.apply(this, arguments);
-          // @TODO
-          return orig;
-          //return formatUtil.GeoRefineTokenFormatter(orig);
+      return deferred;
+    };
+
+
+    // Define the formatFilters function for facet.
+    numericFacet.formatFilters = function(selection){
+      // 'this' is a numeric facet view.
+      var filter_entity = this.model.get('filter_entity');
+      var formatted_filters = [];
+      _.each(['min', 'max'], function(minmax){
+        var val = parseFloat(selection[minmax]);
+        if (! isNaN(val)){
+          var op = (minmax == 'min') ? '>=' : '<=';
+          formatted_filters.push([filter_entity, op, val]);
+        }
+      });
+      return formatted_filters;
+    };
+
+    // Define formatter for the view.
+    numericFacet.formatter = function(format, value){
+      return formatUtil.GeoRefineFormatter(format, value);
+    };
+  };
+
+  // Time slider facet decorator.
+  facetDecorators['timeSlider'] = function(timeSliderFacet){
+    var model = timeSliderFacet.model;
+
+    // Define getData function for model.
+    model.getData = function(){
+      // 'this' is a timeSliderFacet model.
+      var _this = this;
+
+      // Copy the key entity.
+      var key = JSON.parse(JSON.stringify(_this.get('KEY')));
+
+      // Assemble request.
+      key['QUERY']['ID'] = 'key_query'
+      var keyed_query_req = {
+        'ID': 'keyed_results',
+        'REQUEST': 'execute_keyed_queries',
+        'PARAMETERS': {
+          'KEY': key,
+          'QUERIES': [key['QUERY']]
+        }
+      };
+      var requests = [keyed_query_req];
+
+      // Start request and save the deferred object.
+      var deferred = $.ajax({
+        url: GeoRefine.app.requestsEndpoint,
+        type: 'POST',
+        data: {
+          'requests': JSON.stringify(requests)
         },
-        getFacetCollectionViewClass: function(){
-          return GRFacetCollectionView;
-        }
-      });
+        success: function(data, status, xhr){
+          var results = data.results;
 
-      // Create facets editor view.
-      var facetsEditorView = new GRFacetsEditorView({
-        el: opts.el,
-        model: facetsEditorModel,
-      });
-
-      return facetsEditorView;
-
-      // Setup initial facets.
-      //@TODO
-      /*
-         var facetCollectionView = facetsEditorView.subViews.facets;
-         if (facetCollectionView){
-      // Initialize and connect any initial facets.
-      _.each(facetCollectionView.registry, function(facetView, id){
-      initializeFacet(facetView);
-      connectFacet(facetView);
-      });
-
-      // Disconnect facets when removed.
-      facetCollectionView.on('removeFacetView', function(view){
-      disconnectFacet(view)
-      });
-      }
-      */
-    };
-
-    /**
-     * Initialize a facet.  Sets filters, qfield.
-     **/
-    var initializeFacet = function(facet, opts){
-      console.log('initializeFacet');
-      /*
-      decorateFacet(facet);
-      facet.model.set({quantity_field: opts.qField}, {silent: true});
-      facet.updateFilters();
-      updateFacetModelPrimaryFilters(facet.model, {silent: true});
-      filtersUtil.updateModelFilters(facet.model, 'base', {silent: true});
-      if (GeoRefine.app.summaryBar && GeoRefine.app.summaryBar.model){
-            var data = GeoRefine.app.summaryBar.model.get('data');
-            if (data){
-                var total = parseFloat(data.total);
-                if (! isNaN(total)){
-                    facet.model.set('total', total);
-                }
-            }
-        }
-      */
-    };
-
-    var connectFacet = function(facet, opts){
-      console.log('connect');
-    };
-
-    var actionHandlers = {};
-    actionHandlers.facets_addFacet = function(ctx, opts){
-      if (opts.fromDefinition){
-        var predefinedFacets = ctx.dataView.facetsEditor.model.get('predefined_facets');
-        var facetDefModel = predefinedFacets.get(opts.defId);
-        var facetDef = facetDefModel.get('facetDef');
-        facetDef.id = opts.facetId;
-        var facetModel = ctx.dataView.facetsEditor.createFacetModelFromDef(facetDef);
-        ctx.dataView.facetsEditor.model.get('facets').add(facetModel);
-      }
-    };
-
-    actionHandlers.facets_initializeFacet = function(ctx, opts){
-      var facet = ctx.dataView.getFacetView(opts);
-      initializeFacet(facet);
-    };
-
-    actionHandlers.facets_connectFacet = function(ctx, opts){
-      var facet = ctx.dataView.getFacetView(opts);
-      connectFacet(facet);
-    };
-
-    actionHandlers.facets_facetGetData = function(ctx, opts){
-      var facet = ctx.dataView.getFacetView(opts);
-      if (facet.model.getData){
-        return facet.model.getData(opts);
-      }
-    };
-
-    actionHandlers.facets_facetSetSelection = function(ctx, opts){
-      var facet = ctx.dataView.getFacetView(opts);
-      if (facet.model.get('type') == 'timeSlider'){
-        if (opts.index != null){
-          var choice = facet.model.get('choices')[opts.index];
-          facet.model.set('selection', choice.id);
-        }
-      }
-    };
-
-
-    // Define alterState hook for saving facetEditor state.
-    var facetsEditor_alterState = function(ctx, state){
-        state.facetsEditor = serializationUtil.serialize(ctx.facetsEditor.model, state.serializationRegistry);
-    };
-
-    // Define deserializeConfigState hook for facets editor.
-    var facetsEditor_deserializeConfigState = function(configState, deserializedState){
-      console.log(configState);
-        if (! configState.facetsEditor){
-            return;
-        }
-        var facetsEditorModel = new Backbone.Model();
-
-        // Make collections and models for facet editor sub-collections.
-        _.each(['facets', 'predefined_facets'], function(attr){
-            var collection = new Backbone.Collection();
-            _.each(configState.facetsEditor[attr], function(modelDef){
-                var model = new Backbone.Model(_.extend({}, modelDef));
-                collection.add(model);
+          // Generate choices from data.
+          var choices = [];
+          _.each(results['keyed_results'], function(result){
+            value = null,
+            choices.push({
+              'id': result['key'],
+              'label': result['label'],
+              'value': value
             });
-            facetsEditorModel.set(attr, collection);
-        });
+          }, _this);
 
-        deserializedState.facetsEditor = facetsEditorModel;
-        console.log(deserializedState);
+          // Sort choices.
+          choices = _.sortBy(choices, function(choice){
+            return choice['label'];
+          });
+
+          _this.set('choices', choices);
+        }
+      });
+
+      return deferred;
     };
 
-    var exports = {
-      createFacetsEditor: createFacetsEditor,
-      actionHandlers: actionHandlers,
-      deserializeConfigStateHooks: [
-        facetsEditor_deserializeConfigState
-      ]
+    // Define formatFilters function for the view.
+    timeSliderFacet.formatFilters = function(selection){
+      var _this = this;
+      var formatted_filters = [
+        [_this.model.get('filter_entity'), '==', selection]
+      ];
+      return formatted_filters;
+    };
+  };
+
+  // List facet decorator.
+  facetDecorators['list'] = function(listFacet){
+    var model = listFacet.model;
+
+    // Define getData function for model.
+    model.getData = function(){
+      // 'this' is a list facet model.
+      var _this = this;
+      var qfield = this.get('quantity_field');
+      if (! qfield){
+        return;
+      }
+
+      // Copy the key entity.
+      var key = JSON.parse(JSON.stringify(_this.get('KEY')));
+
+      // Assemble request.
+      var keyed_query_req = requestsUtil.makeKeyedQueryRequest(_this, key);
+      var requests = [];
+      requests.push(keyed_query_req);
+
+      // Execute requests and save the deferred object.
+      var deferred = $.ajax({
+        url: GeoRefine.app.requestsEndpoint,
+        type: 'POST',
+        data: {
+          'requests': JSON.stringify(requests)
+        },
+        success: function(data, status, xhr){
+          var results = data.results;
+          var count_entity = qfield.get('outer_query')['SELECT'][0];
+
+          // Generate choices from data.
+          var choices = [];
+          _.each(results['keyed_results'], function(result){
+            value = result['data']['outer'][count_entity['ID']];
+            choices.push({
+              id: result['key'],
+              label: result['label'],
+              count: value,
+              count_label: formatUtil.GeoRefineFormatter(qfield.get('format') || '%s', value)
+            });
+          });
+          _this.set('choices', choices);
+        }
+      });
+
+      return deferred;
     };
 
-    return exports;
+    // Define the formatFilters function for the view.
+    listFacet.formatFilters = function(selection){
+      // 'this' is a listFacetView.
+      var formatted_filters = [];
+      if (selection.length > 0){
+        formatted_filters = [
+          [this.model.get('filter_entity'), 'in', selection]
+        ];
+      }
+      return formatted_filters;
+    };
+
+    // Define formatChoiceCountLabels function for the view.
+    listFacet.formatChoiceCountLabels = function(choices){
+      // 'this' is a listFacetView.
+      var labels = [];
+      var count_entity = this.model.get('count_entity');
+      _.each(choices, function(choice){
+        var label = "";
+        if (count_entity && count_entity.format){
+          label = formatUtil.GeoRefineFormatter(count_entity.format || '%s', choice['count']);
+        }
+        else{
+          label = choice['count'];
+        }
+        labels.push(label);
+      });
+      return labels;
+    };
+  };
+
+  var decorateFacet = function(facet){
+    var decorator = facetDecorators[facet.model.get('type')];
+    if (decorator){
+      decorator(facet);
+    }
+  };
+
+  var updateFacetModelPrimaryFilters = function(facetModel, opts){
+    var filters = FiltersUtil.getModelFilters(facetModel, 'primary', opts);
+    // Remove filters generated by this facet.
+    _.each(filters, function(filterSet, groupId){
+      var keep_filters = [];
+      _.each(filterSet, function(filter){
+        if (filter.source.id != facetModel.id){
+          keep_filters.push(filter);
+        }
+      });
+      filters[groupId] = keep_filters;
+    });
+  };
+
+  /**
+   * Initialize a facet.  Sets filters, decorates, qfield.
+   **/
+  var initializeFacet = function(facet, opts){
+    opts = opts || {};
+    decorateFacet(facet);
+    if (opts.qField){
+      facet.model.set({quantity_field: opts.qField}, {silent: true});
+    }
+    facet.updateFilters();
+    updateFacetModelPrimaryFilters(facet.model, {silent: true, filterGroups: opts.filterGroups});
+    FiltersUtil.updateModelFilters(facet.model, 'base', {silent: true, filterGroups: opts.filterGroups});
+  };
+
+  var connectFacet = function(facet, opts){
+    console.log('connect');
+  };
+
+  var actionHandlers = {};
+  actionHandlers.facets_addFacet = function(ctx, opts){
+    if (opts.fromDefinition){
+      var predefinedFacets = ctx.dataView.facetsEditor.model.get('predefined_facets');
+      var facetDefModel = predefinedFacets.get(opts.defId);
+      var facetDef = facetDefModel.get('facetDef');
+      facetDef.id = opts.facetId;
+      var facetModel = ctx.dataView.facetsEditor.createFacetModelFromDef(facetDef);
+      ctx.dataView.facetsEditor.model.get('facets').add(facetModel);
+    }
+  };
+
+  actionHandlers.facets_initializeFacet = function(ctx, opts){
+    var facet = ctx.dataView.getFacetView(opts);
+    var filterGroups = ctx.dataView.filterGroups;
+    initializeFacet(facet, {filterGroups: filterGroups});
+  };
+
+  actionHandlers.facets_connectFacet = function(ctx, opts){
+    var facet = ctx.dataView.getFacetView(opts);
+    var filterGroups = ctx.dataView.filterGroups;
+    connectFacet(facet, {filterGroups: filterGroups});
+  };
+
+  actionHandlers.facets_facetGetData = function(ctx, opts){
+    var facet = ctx.dataView.getFacetView(opts);
+    if (facet.model.getData){
+      return facet.model.getData(opts);
+    }
+  };
+
+  actionHandlers.facets_facetSetSelection = function(ctx, opts){
+    var facet = ctx.dataView.getFacetView(opts);
+    if (facet.model.get('type') == 'timeSlider'){
+      if (opts.index != null){
+        var choice = facet.model.get('choices')[opts.index];
+        facet.model.set('selection', choice.id);
+      }
+    }
+  };
+
+
+  // Define alterState hook for saving facetEditor state.
+  var facetsEditor_alterState = function(ctx, state){
+    state.facetsEditor = serializationUtil.serialize(ctx.facetsEditor.model, state.serializationRegistry);
+  };
+
+  // Define deserializeConfigState hook for facets editor.
+  var facetsEditor_deserializeConfigState = function(configState, deserializedState){
+    console.log(configState);
+    if (! configState.facetsEditor){
+      return;
+    }
+    var facetsEditorModel = new Backbone.Model();
+
+    // Make collections and models for facet editor sub-collections.
+    _.each(['facets', 'predefined_facets'], function(attr){
+      var collection = new Backbone.Collection();
+      _.each(configState.facetsEditor[attr], function(modelDef){
+        var model = new Backbone.Model(_.extend({}, modelDef));
+        collection.add(model);
+      });
+      facetsEditorModel.set(attr, collection);
+    });
+
+    deserializedState.facetsEditor = facetsEditorModel;
+    console.log(deserializedState);
+  };
+
+  var exports = {
+    createFacetsEditor: createFacetsEditor,
+    actionHandlers: actionHandlers,
+    deserializeConfigStateHooks: [
+      facetsEditor_deserializeConfigState
+    ],
+    postInitializeHooks: [
+      facetsEditor_postInitialize
+    ]
+  };
+
+  return exports;
 });
