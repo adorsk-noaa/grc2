@@ -7,14 +7,136 @@ require(
 function($, DataViewCss, DataView){
 
   var dvConfig = {
-    qField: {},
+    qField: {
+      id: 'a',
+      format: '%.1s',
+      inner_query: {
+        SELECT: [
+          {ID: 'a_sum', EXPRESSION: 'func.sum(__result__a)'}
+        ]
+      },
+      label: 'A',
+      outer_query: {
+        SELECT: [
+          {ID: 'a_sum', EXPRESSION: '__inner__a_sum'}
+        ]
+      },
+      value_type: 'numeric'
+    },
     filterGroups: [
       {id: 'fg1'},
       {id: 'fg2'}
     ],
-    facets: {},
+    facets: {
+      definitions: {
+        timestep: {
+          "facetDef":{
+            "noClose":true,
+            "choices":[],
+            "value_type":"numeric",
+            "KEY":{
+              "QUERY":{
+                "SELECT":[
+                  {
+                  "EXPRESSION":"__time__id",
+                  "ID":"t"
+                }
+                ]
+              },
+              "KEY_ENTITY":{
+                "EXPRESSION":"__result__t",
+                "ID":"t"
+              }
+            },
+            "label":"Timestep",
+            "type":"timeSlider",
+            "filter_entity":{
+              "TYPE":"ENTITY",
+              "EXPRESSION":"__result__t",
+              "ID":"t"
+            },
+            "primary_filter_groups":[
+              "scenario"
+            ]
+          },
+          "id":"timestep"
+        }
+      }
+    },
     map: {},
-    initialState: {}
+    initialState: {},
+    initialActions: {
+      "async":false,
+      "actions": [
+        {
+        "async":false,
+        "type":"actionQueue",
+        "actions":[
+          {
+          "handler":"facets_addFacet",
+          "type":"action",
+          "opts":{
+            "category":"base",
+            "facetId":"tstep",
+            "defId":"timestep",
+            "fromDefinition":true
+          }
+        },
+        {
+          "handler":"facets_initializeFacet",
+          "type":"action",
+          "opts":{
+            "category":"base",
+            "id":"tstep"
+          }
+        },
+        {
+          "handler":"facets_connectFacet",
+          "type":"action",
+          "opts":{
+            "category":"base",
+            "id":"tstep"
+          }
+        },
+        {
+          "handler":"facets_facetGetData",
+          "type":"action",
+          "opts":{
+            "category":"base",
+            "id":"tstep"
+          }
+        },
+        {
+          "handler":"facet_facetSetSelection",
+          "type":"action",
+          "opts":{
+            "category":"base",
+            "index":1,
+            "id":"tstep"
+          }
+        }
+        ]
+      },
+      {
+        "async":false,
+        "type":"actionQueue",
+        "actions":[
+          {
+          "handler":"summaryBar_initialize",
+          "type":"action"
+        },
+        {
+          "handler":"summaryBar_connect",
+          "type":"action"
+        },
+        {
+          "handler":"summaryBar_getData",
+          "type":"action"
+        }
+        ]
+      },
+      ]
+    }
   };
 
 
