@@ -13,7 +13,6 @@ function($){
         handler = ctx.handlers[action.handler];
       }
       return function(){
-        console.log("action is: ", action);
         return handler(ctx, action.opts);
       };
     };

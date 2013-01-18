@@ -116,6 +116,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
       _.each(groupIds, function(filterGroupId){
         var filterGroup = filterGroups[filterGroupId];
         filterGroup.on('change:filters', function(){
+          console.log('chango');
           var filters = _.clone(summaryBar.model.get(filterCategory + '_filters')) || {};
           filters[filterGroupId] = filterGroup.getFilters();
           summaryBar.model.set(filterCategory + '_filters', filters);
@@ -141,6 +142,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
   var initializeSummaryBar = function(opts){
     var summaryBar = opts.summaryBar;
     var qField = opts.qField;
+    var filterGroups = opts.filterGroups;
 
     decorateSummaryBar({summaryBar: summaryBar});
     if (qField){
@@ -149,7 +151,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
 
     // Set filters.
     _.each(['base', 'primary'], function(filterCategory){
-      FiltersUtil.updateModelFilters(summaryBar.model, filterCategory, {silent: true});
+      FiltersUtil.updateModelFilters(summaryBar.model, filterCategory, {silent: true, filterGroups: filterGroups});
     });
   };
 
@@ -158,7 +160,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
   // Initialize summary bar.  Sets filters, qField.
   actionHandlers.summaryBar_initialize = function(ctx, opts){
     var summaryBar = ctx.dataView.summaryBar;
-    initializeSummaryBar({summaryBar: summaryBar, qField: ctx.dataView.qField});
+    initializeSummaryBar({summaryBar: summaryBar, qField: ctx.dataView.qField, filterGroups: ctx.dataView.filterGroups});
   };
 
   // Connect summaryBar.
@@ -177,11 +179,23 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
     }
   };
 
+  // Define deserializeConfigState hook for facets editor.
+  var summaryBar_deserializeConfigState = function(configState, deserializedState){
+    if (! configState.summaryBar){
+      return;
+    }
+    var summaryBarModel = new Backbone.Model(configState.summaryBar);
+    deserializedState.summaryBar= summaryBarModel;
+  };
+
   var exports = {
     createSummaryBar: createSummaryBar,
     connectSummaryBar: connectSummaryBar,
     initializeSummaryBar: initializeSummaryBar,
-    actionHandlers: actionHandlers
+    actionHandlers: actionHandlers,
+    deserializeConfigStateHooks: [
+      summaryBar_deserializeConfigState
+    ],
   };
   return exports;
 });

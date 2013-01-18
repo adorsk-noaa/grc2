@@ -6,13 +6,14 @@ define([
 	"Util",
 	"./filters",
 	"./facets",
+	"./summaryBar",
 	"./serialization"
 ],
-function($, Backbone, _, _s, Util, FiltersUtil, FacetsUtil, SerializationUtil){
+function($, Backbone, _, _s, Util, FiltersUtil, FacetsUtil, SummaryBarUtil, SerializationUtil){
 
     // Registry for alterState hooks.
     var alterStateHooks = [];
-    _.each([FiltersUtil, FacetsUtil], function(module){
+    _.each([FiltersUtil, FacetsUtil, SummaryBarUtil], function(module){
         _.each(module.alterStateHooks, function(hook){
             alterStateHooks.push(hook);
         });
@@ -55,7 +56,7 @@ function($, Backbone, _, _s, Util, FiltersUtil, FacetsUtil, SerializationUtil){
 
     // Registry for deserializeConfigState hooks.
     var deserializeConfigStateHooks = [];
-    _.each([FiltersUtil, FacetsUtil], function(module){
+    _.each([FiltersUtil, FacetsUtil, SummaryBarUtil], function(module){
         _.each(module.deserializeConfigStateHooks, function(hook){
             deserializeConfigStateHooks.push(hook);
         });

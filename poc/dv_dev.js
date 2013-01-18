@@ -15,17 +15,17 @@ function($, DataViewCss, DataView){
   var dvConfig = {
     defaultInitialState: {
       qField: {
-        id: 'a',
+        id: 'z',
         format: '%.1s',
         inner_query: {
           SELECT: [
-            {ID: 'a_sum', EXPRESSION: 'func.sum(__result__a)'}
+            {ID: 'z_sum', EXPRESSION: 'func.sum(__result__z)'}
           ]
         },
-        label: 'A',
+        label: 'Z',
         outer_query: {
           SELECT: [
-            {ID: 'a_sum', EXPRESSION: '__inner__a_sum'}
+            {ID: 'z_sum', EXPRESSION: '__inner__z_sum'}
           ]
         },
         value_type: 'numeric'
@@ -35,6 +35,11 @@ function($, DataViewCss, DataView){
         {id: 'scenario'},
         {id: 'data'}
       ],
+
+      summaryBar: {
+        base_filter_groups: ['scenario'],
+        primary_filter_groups: ['scenario', 'data']
+      },
 
       facetsEditor: {
         predefined_facets: {

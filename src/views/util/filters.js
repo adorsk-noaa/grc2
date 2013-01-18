@@ -7,7 +7,8 @@ define([
 ],
 function($, Backbone, _, _s, Util){
 
-  var decorateFilterGroup = function(filterGroup){
+  var decorateFilterGroup = function(filterGroup, filterGroupId){
+
     // Define getFilters method for each group.
     filterGroup.getFilters = function(){
       var filters = [];

@@ -8,7 +8,6 @@ define([
 function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
 
   var createFacetsEditor = function(opts){
-    opts = opts || {};
     var facetsEditorModel = opts.model || new Backbone.Model();
     // Use a customized FacetCollectionView which adds a token
     // formatter to each facet view class.
@@ -53,7 +52,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
     // Initialize and connect initial facets.
     _.each(facetCollectionView.registry, function(facetView, id){
       initializeFacet(facetView, {filterGroups: opts.filterGroups});
-      connectFacet(facetView);
+      connectFacet(facetView, {filterGroups: opts.filterGroups});
     });
     // Disconnect facets when removed.
     facetCollectionView.on('removeFacetView', function(view){
@@ -72,7 +71,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
     if (facetCollectionView){
       facetCollectionView.on('addFacetView', function(view){
         initializeFacet(view, {filterGroups: opts.filterGroups});
-        connectFacet(view);
+        connectFacet(view, {filtersGroups: opts.filterGroups});
         if(view.model.getData){
           var opts = {};
           if (view.model.get('type') == 'numeric'){
@@ -398,7 +397,63 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
   };
 
   var connectFacet = function(facet, opts){
-    console.log('connect');
+    // Setup the facet's primary filter groups.
+    _.each(facet.model.get('primary_filter_groups'), function(filterGroupId, key){
+      var filterGroup = opts.filterGroups[filterGroupId];
+      filterGroup.add(facet.model);
+      filterGroup.on('change:filters', function(){
+        updateFacetModelPrimaryFilters(this, opts);
+      }, facet.model);
+      // Remove callback when model is removed.
+      facet.model.on('remove', function(){
+        filterGroup.off(null, null, this);
+      }, facet.model);
+    });
+
+    // Setup the facet's base filter group config.
+    _.each(facet.model.get('base_filter_groups'), function(filterGroupId, key){
+      var filterGroup = opts.filterGroups[filterGroupId];
+      filterGroup.on('change:filters', function(){
+        filtersUtil.updateModelFilters(this, 'base', opts);
+      }, facet.model);
+      // Remove callback when model is removed.
+      facet.model.on('remove', function(){
+        filterGroup.off(null, null, this);
+      }, facet.model);
+    });
+
+    // Have the facet update when its query or base filters or quantity_field change.
+    if (facet.model.getData){
+      // helper function to get a timeout getData function.
+      var _timeoutGetData = function(changes){
+        var delay = 500;
+        return setTimeout(function(){
+          var getDataOpts = {};
+          // For numeric facet, add update range flag
+          // for base_filter changes.
+          if (facet.model.get('type') == 'numeric' 
+              && changes && changes.changes 
+            && changes.changes['base_filters']){
+              getDataOpts.updateRange = true;
+            }
+            facet.model.getData(getDataOpts);
+            facet.model.set('_fetch_timeout', null);
+        }, delay);
+      };
+
+      facet.model.on('change:primary_filters change:base_filters change:quantity_field', function(){
+        var changes = arguments[2];
+        // We delay the get data call a little, in case multiple things are changing.
+        // The last change will get executed.
+        var fetch_timeout = this.get('_fetch_timeout');
+        // If we're fetching, clear the previous fetch.
+        if (fetch_timeout){
+          clearTimeout(fetch_timeout);
+        }
+        // Start a new fetch.
+        this.set('_fetch_timeout', _timeoutGetData(changes));
+      }, facet.model);
+    }
   };
 
   var actionHandlers = {};
@@ -450,7 +505,6 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
 
   // Define deserializeConfigState hook for facets editor.
   var facetsEditor_deserializeConfigState = function(configState, deserializedState){
-    console.log(configState);
     if (! configState.facetsEditor){
       return;
     }
@@ -467,7 +521,6 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
     });
 
     deserializedState.facetsEditor = facetsEditorModel;
-    console.log(deserializedState);
   };
 
   var exports = {

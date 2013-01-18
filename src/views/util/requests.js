@@ -48,8 +48,8 @@ function(_, _s, Util, FiltersUtil){
     }
 
     _.each(filter_attrs, function(filter_attr){
-      filters = model.get(filter_attr);
-      filter_array = FiltersUtil.filterObjectGroupsToArray(filters);
+      var filters = model.get(filter_attr);
+      var filter_array = FiltersUtil.filterObjectGroupsToArray(filters);
       _.each(filter_array, function(f){
         q['WHERE'].push(f);
       });

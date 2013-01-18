@@ -63,16 +63,9 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     setupFilterGroups: function(){
       var _this = this;
-      // Initialize filter groups...maybe move this into state deserialize
-      // later.
       _this.filterGroups = _this.state.filterGroups;
-      _.each(_this.config.filterGroups, function(filterGroupDef){
-        var filterGroup = new Backbone.Collection();
-        _this.filterGroups[filterGroupDef.id] = filterGroup;
-      });
-
-      _.each(_this.filterGroups, function(filterGroup){
-        FiltersUtil.decorateFilterGroup(filterGroup);
+      _.each(_this.filterGroups, function(filterGroup, filterGroupId){
+        FiltersUtil.decorateFilterGroup(filterGroup, filterGroupId);
       });
     },
 
@@ -87,6 +80,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
         model: this.state.facetsEditor,
         config: this.config.facets,
         el: $('.facets-editor', this.el),
+        filterGroups: this.filterGroups
       });
     },
 
@@ -98,7 +92,6 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     },
 
     setupMap: function(){
-      console.log('setupMap');
     },
 
     setupInitialState: function(){
