@@ -27,44 +27,45 @@ function($, DataViewCss, DataView){
       {id: 'fg1'},
       {id: 'fg2'}
     ],
-    facets: {
-      definitions: {
-        timestep: {
-          "facetDef":{
-            "noClose":true,
-            "choices":[],
-            "value_type":"numeric",
-            "KEY":{
-              "QUERY":{
-                "SELECT":[
-                  {
-                  "EXPRESSION":"__time__id",
+    defaultInitialState: {
+      facetsEditor: {
+        predefined_facets: {
+          timestep: {
+            "facetDef":{
+              "noClose":true,
+              "choices":[{id: 0}],
+              "value_type":"numeric",
+              "KEY":{
+                "QUERY":{
+                  "SELECT":[
+                    {
+                    "EXPRESSION":"__time__id",
+                    "ID":"t"
+                  }
+                  ]
+                },
+                "KEY_ENTITY":{
+                  "EXPRESSION":"__result__t",
                   "ID":"t"
                 }
-                ]
               },
-              "KEY_ENTITY":{
+              "label":"Timestep",
+              "type":"timeSlider",
+              "filter_entity":{
+                "TYPE":"ENTITY",
                 "EXPRESSION":"__result__t",
                 "ID":"t"
-              }
+              },
+              "primary_filter_groups":[
+                "scenario"
+              ]
             },
-            "label":"Timestep",
-            "type":"timeSlider",
-            "filter_entity":{
-              "TYPE":"ENTITY",
-              "EXPRESSION":"__result__t",
-              "ID":"t"
-            },
-            "primary_filter_groups":[
-              "scenario"
-            ]
-          },
-          "id":"timestep"
+            "id":"timestep"
+          }
         }
-      }
+      },
     },
     map: {},
-    initialState: {},
     initialActions: {
       "async":false,
       "actions": [
@@ -107,16 +108,17 @@ function($, DataViewCss, DataView){
           }
         },
         {
-          "handler":"facet_facetSetSelection",
+          "handler":"facets_facetSetSelection",
           "type":"action",
           "opts":{
             "category":"base",
-            "index":1,
+            "index":0,
             "id":"tstep"
           }
         }
         ]
       },
+      /*
       {
         "async":false,
         "type":"actionQueue",
@@ -135,6 +137,7 @@ function($, DataViewCss, DataView){
         }
         ]
       },
+      */
       ]
     }
   };

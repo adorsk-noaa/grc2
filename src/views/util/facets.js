@@ -6,7 +6,8 @@ define([
 function(_, FacetCollectionView, FacetsEditorView){
 
     var createFacetsEditor = function(opts){
-      var facetsEditorModel = new Backbone.Model();
+      opts = opts || {};
+      var facetsEditorModel = opts.model || new Backbone.Model();
       // Use a customized FacetCollectionView which adds a token
       // formatter to each facet view class.
       // This allows us to do things like adding in the project's
@@ -41,7 +42,7 @@ function(_, FacetCollectionView, FacetsEditorView){
 
       // Create facets editor view.
       var facetsEditorView = new GRFacetsEditorView({
-        el: $('.facets-editor', opts.el),
+        el: opts.el,
         model: facetsEditorModel,
       });
 
@@ -139,8 +140,9 @@ function(_, FacetCollectionView, FacetsEditorView){
     };
 
     // Define deserializeConfigState hook for facets editor.
-    var facetsEditor_deserializeConfigState = function(serializedState, deserializedState){
-        if (! serializedState.facetsEditor){
+    var facetsEditor_deserializeConfigState = function(configState, deserializedState){
+      console.log(configState);
+        if (! configState.facetsEditor){
             return;
         }
         var facetsEditorModel = new Backbone.Model();
@@ -148,19 +150,23 @@ function(_, FacetCollectionView, FacetsEditorView){
         // Make collections and models for facet editor sub-collections.
         _.each(['facets', 'predefined_facets'], function(attr){
             var collection = new Backbone.Collection();
-            _.each(serializedState.facetsEditor[attr], function(modelDef){
+            _.each(configState.facetsEditor[attr], function(modelDef){
                 var model = new Backbone.Model(_.extend({}, modelDef));
                 collection.add(model);
             });
             facetsEditorModel.set(attr, collection);
         });
 
-        deserializedstate.facetsEditor = facetsEditorModel;
+        deserializedState.facetsEditor = facetsEditorModel;
+        console.log(deserializedState);
     };
 
     var exports = {
       createFacetsEditor: createFacetsEditor,
-      actionHandlers: actionHandlers
+      actionHandlers: actionHandlers,
+      deserializeConfigStateHooks: [
+        facetsEditor_deserializeConfigState
+      ]
     };
 
     return exports;

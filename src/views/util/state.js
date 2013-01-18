@@ -8,11 +8,11 @@ define([
 	"./facets",
 	"./serialization"
 ],
-function($, Backbone, _, _s, Util, filtersUtil, facetsUtil, serializationUtil){
+function($, Backbone, _, _s, Util, FiltersUtil, FacetsUtil, SerializationUtil){
 
     // Registry for alterState hooks.
     var alterStateHooks = [];
-    _.each([filtersUtil, facetsUtil, summaryBarUtil], function(module){
+    _.each([FiltersUtil, FacetsUtil], function(module){
         _.each(module.alterStateHooks, function(hook){
             alterStateHooks.push(hook);
         });
@@ -20,7 +20,7 @@ function($, Backbone, _, _s, Util, filtersUtil, facetsUtil, serializationUtil){
 
     // Add hook to add config to state.
     var config_alterState = function(state){
-        state.config = serializationUtil.serialize(GeoRefine.config, state.serializationRegistry);
+        state.config = SerializationUtil.serialize(GeoRefine.config, state.serializationRegistry);
     };
     alterStateHooks.push(config_alterState);
 
@@ -48,14 +48,14 @@ function($, Backbone, _, _s, Util, filtersUtil, facetsUtil, serializationUtil){
         delete serializedState.serializationRegistry;
 
         // Deserialized the serialized state.
-        var deserializedState = serializationUtil.deserialize(serializedState, deserializationRegistry, serializationRegistry);
+        var deserializedState = SerializationUtil.deserialize(serializedState, deserializationRegistry, serializationRegistry);
 
         return deserializedState;
     };
 
     // Registry for deserializeConfigState hooks.
     var deserializeConfigStateHooks = [];
-    _.each([filtersUtil, facetsUtil, summaryBarUtil, dataViewsUtil], function(module){
+    _.each([FiltersUtil, FacetsUtil], function(module){
         _.each(module.deserializeConfigStateHooks, function(hook){
             deserializeConfigStateHooks.push(hook);
         });
@@ -78,111 +78,11 @@ function($, Backbone, _, _s, Util, filtersUtil, facetsUtil, serializationUtil){
         return state;
     };
 
-    // Convert an action definition to an action function.
-    var processAction = function(action){
-        // Get handler for action.
-        var handler = null;
-        if ($.isFunction(action.handler)){
-            handler = action.handler;
-        }
-        else{
-            handler = actionHandlers[action.handler];
-        }
-        // Return handler bound w/ action opts.
-        return function(){
-            return handler(action.opts); 
-        };
-    };
-
-    var getAQStrings = function(actionQueue){
-        var afs = [];
-        var _actionQueue = actionQueue;
-        _.each(_actionQueue.actions, function(action){
-            if (action.type == 'action'){
-                afs.push(action.handler);
-            }
-            else if (action.type == 'actionQueue'){
-                afs.push(getAQStrings(action));
-            }
-        });
-        return afs;
-    };
-
-    // Convert an action queue definition to an action function.
-    var processActionQueue = function(actionQueue){
-        var _id = (Math.random() * 100).toPrecision(3);
-
-        var _actionQueue = actionQueue;
-
-        var queueAction = function(){
-            var deferred = $.Deferred();
-
-            // If there were child actions...
-            if (_actionQueue.actions.length > 0){
-                // Convert child actions into action functions.
-                var actionFuncs = [];
-                _.each(_actionQueue.actions, function(action){
-                    var actionFunc = null;
-                    if (action.type == 'action'){
-                        actionFunc = processAction(action);
-                    }
-                    else if (action.type == 'actionQueue'){
-                        actionFunc = processActionQueue(action);
-                    }
-                    actionFuncs.push(actionFunc);
-                });
-
-
-                // Deferred representing deferred form final child action.
-                var finalDeferred = null;
-
-                // If async, execute actions in parallel.
-                if (_actionQueue.async){
-                    var deferreds = [];
-                    _.each(actionFuncs, function(actionFunc){
-                        deferreds.push(actionFunc());
-                    });
-                    finalDeferred = $.when.apply($, deferreds);
-                }
-
-                // Otherwise, execute actions in sequence.
-                else{
-                    // Initialize with first action.
-                    finalDeferred = $.when(actionFuncs[0]());
-                    // Trigger subsequent subactions in sequence.
-                    for (var i = 1; i < actionFuncs.length; i++){
-                        // We wrap inside a function to avoid closure conflicts.
-                        (function(_i){
-                            finalDeferred = finalDeferred.pipe(function(){
-                                return $.when(actionFuncs[_i]());
-                            });
-                        })(i);
-                    }
-                }
-
-                // When final deferred is complete, resolve.
-                finalDeferred.done(function(){
-                    deferred.resolve();
-                });
-            }
-            // If there were no child actions, resolve immediately.
-            else{
-                deferred.resolve();
-            }
-
-            return deferred;
-        };
-
-        return queueAction;
-    };
-
-    // Objects to expose.
-    var stateUtil = {
+    var exports = {
         serializeState: serializeState,
         deserializeState: deserializeState,
         deserializeConfigState: deserializeConfigState,
-        processActionQueue: processActionQueue
     };
 
-    return stateUtil;
+    return exports;
 });

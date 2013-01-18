@@ -10,8 +10,17 @@ define([
 function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, StateUtil, DataViewTemplate){
 
   var DataView = Backbone.View.extend({
+
     initialize: function(opts){
       var _this = this;
+      opts = _.extend({
+        config: {}
+      }, opts);
+
+      opts.config = _.extend({
+        defaultInitialState: {}
+      }, opts.config);
+
       $(_this.el).addClass('dataview');
 
       _this.config = _this.model.get('config');
@@ -39,11 +48,11 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, StateUtil, DataVi
 
         _this.setupActionHandlers();
 
-        var actionsDeferred = _this.executeInitialActions();
+        var actionsDeferred = _this.processActions(_this.config.initialActions);
         actionsDeferred.done(function(){
           console.log("done with actions");
         });
-
+      });
     },
 
     initialRender: function(){
@@ -99,6 +108,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, StateUtil, DataVi
 
     setupFacetsEditor: function(){
       this.facetsEditor = FacetsUtil.createFacetsEditor({
+        model: this.state.facetsEditor,
         config: this.config.facets,
         el: $('.facets-editor', this.el),
       });
@@ -125,7 +135,6 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, StateUtil, DataVi
 
     onReady: function(){
       this.resize();
-      this.processActions(this.config.initialActions);
     },
 
     processActions: function(actions){
