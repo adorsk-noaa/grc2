@@ -3,9 +3,10 @@ define([
        'underscore',
        'Facets/views/facet_collection',
        'Facets/views/facetsEditor',
+       './SummaryBar',
        'text!./templates/DataView.html'
 ],
-function(Backbone, _, FacetCollectionView, FacetsEditorView, DataViewTemplate){
+function(Backbone, _, FacetCollectionView, FacetsEditorView, SummaryBarView, DataViewTemplate){
   var DataView = Backbone.View.extend({
     initialize: function(opts){
       $(this.el).addClass('dataview');
@@ -132,7 +133,10 @@ function(Backbone, _, FacetCollectionView, FacetsEditorView, DataViewTemplate){
     },
 
     setupSummaryBar: function(){
-      console.log('setupSummaryBar');
+      this.SummaryBar = new SummaryBarView({
+        model: new Backbone.Model(),
+        el: $('.summary-bar', this.el)
+      });
     },
 
     setupMap: function(){
