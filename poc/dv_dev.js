@@ -118,7 +118,6 @@ function($, DataViewCss, DataView){
         }
         ]
       },
-      /*
       {
         "async":false,
         "type":"actionQueue",
@@ -137,7 +136,6 @@ function($, DataViewCss, DataView){
         }
         ]
       },
-      */
       ]
     }
   };

@@ -4,10 +4,11 @@ define([
        './SummaryBar',
        './util/actions',
        './util/facets',
+       './util/summaryBar',
        './util/state',
        'text!./templates/DataView.html'
 ],
-function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, StateUtil, DataViewTemplate){
+function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, SummaryBarUtil, StateUtil, DataViewTemplate){
 
   var DataView = Backbone.View.extend({
 
@@ -115,8 +116,8 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, StateUtil, DataVi
     },
 
     setupSummaryBar: function(){
-      this.SummaryBar = new SummaryBarView({
-        model: new Backbone.Model(),
+      this.summaryBar = SummaryBarUtil.createSummaryBar({
+        model: this.state.summaryBar,
         el: $('.summary-bar', this.el)
       });
     },
@@ -161,9 +162,9 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, StateUtil, DataVi
     setupActionHandlers: function(){
       var _this = this;
       _this.actionHandlers = {};
-      _.each([FacetsUtil], function(UtilModule){
-        if (UtilModule.actionHandlers){
-          _.extend(_this.actionHandlers, UtilModule.actionHandlers);
+      _.each([FacetsUtil, SummaryBarUtil], function(module){
+        if (module.actionHandlers){
+          _.extend(_this.actionHandlers, module.actionHandlers);
         }
       }, _this);
     }
