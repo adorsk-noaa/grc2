@@ -51,4 +51,9 @@ assets = {
         'source': 'https://github.com/adorsk/underscore.string.git',
         'path': 'lib/underscore.string.js'
     },
+    'facets': {
+        'type': 'git',
+        'source': 'https://github.com/adorsk-noaa/bb_facets.git',
+        'refspec': 'noSummaryBar'
+    },
 }
