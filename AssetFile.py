@@ -56,4 +56,25 @@ assets = {
         'source': 'https://github.com/adorsk-noaa/bb_facets.git',
         'refspec': 'noSummaryBar'
     },
+    'jquery.ui.extras': {
+        'type': 'git',
+        'source': 'https://github.com/adorsk-noaa/jquery.ui.extras.git'
+    },
+    'menus': {
+        'type': 'git',
+        'source': 'https://github.com/adorsk-noaa/bb_menus.git'
+    },
+    'jquery.ui.tabble': {
+        'type': 'git',
+        'source': 'https://github.com/adorsk/jquery.ui.tabble.git'
+    },
+    'util': {
+        'type': 'git',
+        'source': 'https://github.com/adorsk-noaa/georefine_util.git'
+    },
+    'jquery.qtip': {
+        'type': 'git',
+        'source': 'https://github.com/Craga89/qTip2.git',
+        'path': 'dist'
+    },
 }

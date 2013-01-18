@@ -1,4 +1,5 @@
 dist/
+local_config.js
 npm-debug.log
 .lock-wscript
 build/node_modules/grunt/node_modules/glob/build

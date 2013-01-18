@@ -1,20 +1,36 @@
 define([
-       'backbone'
+       'backbone',
        'underscore',
-       'Facets/views/FacetCollectionView'
-       'Facets/views/FacetsEditorView'
+       'Facets/views/facet_collection',
+       'Facets/views/facetsEditor',
+       'text!./templates/DataView.html'
 ],
-function(Backbone, _, FacetCollectionView, FacetsEditorView){
+function(Backbone, _, FacetCollectionView, FacetsEditorView, DataViewTemplate){
   var DataView = Backbone.View.extend({
     initialize: function(opts){
+      $(this.el).addClass('dataview');
+      this.config = this.model.get('config');
+      this.initialRender();
       this.setupFilterGroups();
       this.setupWidgets();
       this.setupInitialState();
+      this.on('ready', this.onReady, this);
+    },
+
+    initialRender: function(){
+      $(this.el).html(_.template(DataViewTemplate, {}));
     },
 
     setupFilterGroups: function(){
       var _this = this;
-      _this.filterGroups = _this.config.filterGroups;
+      // Initialize filter groups...maybe move this into state deserialize
+      // later.
+      _this.filterGroups = {};
+      _.each(_this.config.filterGroups, function(filterGroupDef){
+        var filterGroup = new Backbone.Collection();
+        _this.filterGroups[filterGroupDef.id] = filterGroup;
+      });
+
       _.each(_this.filterGroups, function(filterGroup, filterGroupId){
             // Define getFilters method for each group.
             filterGroup.getFilters = function(){
@@ -125,7 +141,16 @@ function(Backbone, _, FacetCollectionView, FacetsEditorView){
 
     setupInitialState: function(){
       console.log('setupInitialState');
+    },
+
+    resize: function(){
+      this.facetsEditor.trigger('resize');
+    },
+
+    onReady: function(){
+      this.resize();
     }
+
   });
 
   return DataView;
