@@ -21,7 +21,7 @@ function($, DataViewCss, DataView){
     defaultInitialState: {
       qField: {
         id: 'z',
-        format: '%.1s',
+        format: '%.1H',
         inner_query: {
           SELECT: [
             {ID: 'z_sum', EXPRESSION: 'func.sum(__result__z)'}
