@@ -6,11 +6,16 @@ require(
 ],
 function($, DataViewCss, DataView){
 
+  var geoRefineBaseUrl = 'http://localhost:8000/georefine';
+  var projectId = 42;
   GeoRefine = {};
   GeoRefine.app = {
-    requestsEndpoint: "http://localhost:8000/georefine/projects/execute_requests/42/"
-  }
-
+    requestsEndpoint: geoRefineBaseUrl + '/projects/execute_requests/' + projectId + '/',
+    WMSLayerEndpoint: geoRefineBaseUrl + '/projects/' + projectId + 'layer',
+    colorBarEndpoint: geoRefineBaseUrl + '/projects/colorbar/',
+    dataLayerEndpoint: geoRefineBaseUrl + '/projects/get_map/' + projectId + '/',
+    keyedStringsEndpoint: geoRefineBaseUrl + '/ks'
+  };
 
   var dvConfig = {
     defaultInitialState: {
@@ -78,7 +83,7 @@ function($, DataViewCss, DataView){
         }
       },
       mapEditor: {
-        "max_extent":[-45, -45, 45, 45],
+        "max_extent":[-80, 30, -65, 45],
         "graticule_intervals":[2],
         "base_layers":[
           {
@@ -93,7 +98,43 @@ function($, DataViewCss, DataView){
         ],
         "overlay_layers":[],
         "base_filter_groups":["scenario"],
-        "data_layers": [],
+        "data_layers": [
+          {
+          "layer_type":"WMS",
+          "geom_id_entity":{"ID":"z_geom_id"},
+          "options":{},
+          "outer_query":{
+            "FROM":[{
+              "SOURCE":"cell",
+              "JOINS":[
+                ["inner", [{"TYPE":"ENTITY", "EXPRESSION":"__inner__cell_id"},
+                  "==", { "TYPE":"ENTITY", "EXPRESSION":"__cell__id" }]]
+              ]
+            }
+            ],
+            "SELECT":[
+              {"EXPRESSION":"__cell__id", "ID":"z_geom_id" },
+              {"EXPRESSION":"__cell__geom", "ID":"z_geom"},
+              {"EXPRESSION":"__inner__z_data / __cell__area", "ID":"z_data"}
+            ]
+          },
+          "geom_entity":{"ID":"z_geom"},
+          "label":"Net Swept Area (Z) (density)",
+          "disabled":true,
+          "source":"georefine_data_layer",
+          "inner_query":{
+            "GROUP_BY":[{"EXPRESSION":"__result__cell_id", "ID":"cell_id"}],
+            "SELECT":[{"EXPRESSION":"func.sum(__result__z)", "ID":"z_data" }]
+          },
+          "info":"info test",
+          "params":{
+            "transparent":true
+          },
+          "data_entity":{"max":1,"ID":"z_data","min":0 },
+          "layer_category":"data",
+          "id":"z"
+        }
+        ],
         "default_layer_options":{
           "transitionEffect":"resize",
           "tileSize":{"w":1024, "h":1024},
@@ -177,6 +218,10 @@ function($, DataViewCss, DataView){
         }
         ]
       },
+      {
+        "handler":"mapEditor_initializeMapEditor",
+        "type":"action"
+      }
       ]
     }
   };

@@ -137,7 +137,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     setupActionHandlers: function(){
       var _this = this;
       _this.actionHandlers = {};
-      _.each([FacetsUtil, SummaryBarUtil], function(module){
+      _.each([FacetsUtil, SummaryBarUtil, MapUtil], function(module){
         if (module.actionHandlers){
           _.extend(_this.actionHandlers, module.actionHandlers);
         }
