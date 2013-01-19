@@ -3,6 +3,7 @@
 @import url("require:CommonStyles/styles/button.less");
 @import url("require:CommonStyles/styles/rounded-corners.less");
 @import url("require:Facets/styles/facets.less");
+@import url("require:MapView/styles/mapview.less");
 @import url("require:qtip/jquery.qtip.css");
 @import url("require:uiExtras/styles/jquery.ui.selectmenu.css");
 @import url("require:Util/styles/util.less");
@@ -23,9 +24,22 @@
 
   .right-cell{
     width: auto;
+    .right-cell-table{
+      height: 100%;
+      width: 100%;
+
+      .map-editor-cell {
+        height: 100%;
+      }
+    }
   }
 
   .facets-editor {
     height: 100%;
+  }
+
+  .map-editor {
+    height: 100%;
+    width: 100%;
   }
 }

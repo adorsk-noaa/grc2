@@ -77,8 +77,36 @@ function($, DataViewCss, DataView){
           }
         }
       },
+      mapEditor: {
+        "max_extent":[-45, -45, 45, 45],
+        "graticule_intervals":[2],
+        "base_layers":[
+          {
+          "layer_type":"WMS",
+          "label":"Layer 0",
+          "disabled":false,
+          "service_url": 'http://vmap0.tiles.osgeo.org/wms/vmap0',
+          "params": {"layers": 'basic'},
+          "id":"layer0",
+          "options":{}
+        },
+        ],
+        "overlay_layers":[],
+        "base_filter_groups":["scenario"],
+        "data_layers": [],
+        "default_layer_options":{
+          "transitionEffect":"resize",
+          "tileSize":{"w":1024, "h":1024},
+          "buffer":0
+        },
+        "default_layer_attributes":{
+          "disabled":true,
+          "reorderable":true
+        },
+        "resolutions":[0.025,0.0125,0.00625,0.003125,0.0015625,0.00078125],
+        "primary_filter_groups":["data"]
+      },
     },
-    map: {},
     initialActions: {
       "async":false,
       "actions": [

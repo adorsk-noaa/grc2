@@ -77,4 +77,14 @@ assets = {
         'source': 'https://github.com/Craga89/qTip2.git',
         'path': 'dist'
     },
+    'mapview': {
+        'type': 'git',
+        'source': 'https://github.com/adorsk-noaa/bb_mapview.git'
+    },
+    'openlayers': {
+        'type': 'url',
+        'source': 'http://openlayers.org/download/OpenLayers-2.12.zip',
+        'unzip': True,
+        'path': 'OpenLayers-2.12' 
+    },
 }

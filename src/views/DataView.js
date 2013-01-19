@@ -7,9 +7,10 @@ define([
        './util/filters',
        './util/summaryBar',
        './util/state',
+       './util/map',
        'text!./templates/DataView.html'
 ],
-function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, DataViewTemplate){
+function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil, DataViewTemplate){
 
   var DataView = Backbone.View.extend({
 
@@ -72,7 +73,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     setupWidgets: function(){
       this.setupFacetsEditor();
       this.setupSummaryBar();
-      this.setupMap();
+      this.setupMapEditor();
     },
 
     setupFacetsEditor: function(){
@@ -91,7 +92,11 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       });
     },
 
-    setupMap: function(){
+    setupMapEditor: function(){
+      this.mapEditor = MapUtil.createMapEditor({
+        model: this.state.mapEditor,
+        el: $('.map-editor', this.el)
+      });
     },
 
     setupInitialState: function(){
@@ -100,10 +105,12 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     resize: function(){
       this.facetsEditor.trigger('resize');
+      this.mapEditor.trigger('resize');
     },
 
     onReady: function(){
       this.resize();
+      this.mapEditor.trigger('ready');
     },
 
     processActions: function(actions){
