@@ -12,6 +12,8 @@ define([
 ],
 function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil, DataViewTemplate){
 
+  var UtilModules = [ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil];
+
   var DataView = Backbone.View.extend({
 
     initialize: function(opts){
@@ -54,8 +56,36 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
         var actionsDeferred = _this.processActions(_this.config.initialActions);
         actionsDeferred.done(function(){
           console.log("done with actions");
+          _this.initialized = true;
+          _this.trigger("ready");
+          _this.postInitialize();
         });
       });
+    },
+
+    postInitialize: function(){
+      var _this = this;
+      // Listen for window resize events.
+      this.on('resize', this.resize, this);
+      this.on('resizeStop', this.resizeStop, this);
+
+      var ctx = {
+        dataView: this
+      };
+
+      // Call post initialize hooks.
+      _.each(UtilModules, function(module){
+        _.each(module.postInitializeHooks, function(hook){
+          hook(ctx, {});
+        });
+      });
+
+      // Setup infotips.
+      /*
+      GeoRefineViewsUtil.infotipsUtil.setUpInfotips({
+        el: this.el
+      });
+      */
     },
 
     initialRender: function(){
@@ -71,8 +101,8 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     },
 
     setupWidgets: function(){
-      this.setupFacetsEditor();
       this.setupSummaryBar();
+      this.setupFacetsEditor();
       this.setupMapEditor();
     },
 
@@ -81,7 +111,8 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
         model: this.state.facetsEditor,
         config: this.config.facets,
         el: $('.facets-editor', this.el),
-        filterGroups: this.filterGroups
+        filterGroups: this.filterGroups,
+        summaryBar: this.summaryBar
       });
     },
 
@@ -106,6 +137,9 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     resize: function(){
       this.facetsEditor.trigger('resize');
       this.mapEditor.trigger('resize');
+    },
+
+    resizeStop: function(){
     },
 
     onReady: function(){

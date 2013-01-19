@@ -379,7 +379,6 @@ function($, Backbone, _, _s, Util, FiltersUtil, FormatUtil, SerializationUtil, R
     // Assign colormap if none was specified.
     if (! data_entity.get('colormap')){
       var cmapId = data_entity.get('colormap_id') || 'ColorBrewer:Rd';
-      console.log(cmapId, ColorMapUtil.CMAPS);
       data_entity.set('colormap', ColorMapUtil.CMAPS[cmapId]);
     }
 

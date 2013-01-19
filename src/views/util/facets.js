@@ -4,11 +4,14 @@ define([
        'Facets/views/facetsEditor',
        './functions',
        './filters',
+       './requests',
+       './format'
 ],
-function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
+function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, RequestsUtil, FormatUtil){
 
   var createFacetsEditor = function(opts){
     var facetsEditorModel = opts.model || new Backbone.Model();
+    var summaryBar = opts.summaryBar;
     // Use a customized FacetCollectionView which adds a token
     // formatter to each facet view class.
     // This allows us to do things like adding in the project's
@@ -21,7 +24,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
             var orig = BaseFacetClass.prototype.formatter.apply(this, arguments);
             // @TODO
             return orig;
-            //return formatUtil.GeoRefineTokenFormatter(orig);
+            //return FormatUtil.GeoRefineTokenFormatter(orig);
           }
         });
         return GRFacetClass;
@@ -34,7 +37,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
         var orig = FacetsEditorView.prototype.formatter.apply(this, arguments);
         // @TODO
         return orig;
-        //return formatUtil.GeoRefineTokenFormatter(orig);
+        //return FormatUtil.GeoRefineTokenFormatter(orig);
       },
       getFacetCollectionViewClass: function(){
         return GRFacetCollectionView;
@@ -52,32 +55,33 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
     // Initialize and connect initial facets.
     _.each(facetCollectionView.registry, function(facetView, id){
       initializeFacet(facetView, {filterGroups: opts.filterGroups});
-      connectFacet(facetView, {filterGroups: opts.filterGroups});
+      connectFacet(facetView, {filterGroups: opts.filterGroups, summaryBar: summaryBar});
     });
     // Disconnect facets when removed.
     facetCollectionView.on('removeFacetView', function(view){
-      disconnectFacet(view)
+      disconnectFacet(view, {filterGroups: opts.filterGroups, summaryBar: opts.summaryBar});
     });
 
     return facetsEditorView;
   };
 
   // Define postInitialize hook.
-  var facetsEditor_postInitialize = function(opts){
-    var facetsEditor = opts.facetsEditor;
+  var facetsEditor_postInitialize = function(ctx, opts){
+    var facetsEditor = ctx.dataView.facetsEditor;
+    var summaryBar = ctx.dataView.summaryBar;
 
     // Initialize and connect newly created facets.
     var facetCollectionView = facetsEditor.subViews.facets;
     if (facetCollectionView){
       facetCollectionView.on('addFacetView', function(view){
-        initializeFacet(view, {filterGroups: opts.filterGroups});
-        connectFacet(view, {filtersGroups: opts.filterGroups});
-        if(view.model.getData){
-          var opts = {};
+        initializeFacet(view, {qField: ctx.dataView.qField, filterGroups: ctx.dataView.filterGroups});
+        connectFacet(view, {filterGroups: ctx.dataView.filterGroups, summaryBar: summaryBar});
+        if (view.model.getData){
+          var getDataOpts = {};
           if (view.model.get('type') == 'numeric'){
-            opts.updateRange = true;
+            getDataOpts.updateRange = true;
           }
-          view.model.getData(opts);
+          view.model.getData(getDataOpts);
         }
       });
     }
@@ -110,15 +114,15 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
       }
       var key_context = key['KEY_ENTITY']['CONTEXT'];
 
-      requestsUtil.addFiltersToQuery(_this, ['base_filters'], key_context);
+      RequestsUtil.addFiltersToQuery(_this, ['base_filters'], key_context);
 
       // Get the base query.
-      var base_inner_q = requestsUtil.makeKeyedInnerQuery(_this, key, ['base_filters']);
-      var base_outer_q = requestsUtil.makeKeyedOuterQuery(_this, key, base_inner_q, 'base');
+      var base_inner_q = RequestsUtil.makeKeyedInnerQuery(_this, key, ['base_filters']);
+      var base_outer_q = RequestsUtil.makeKeyedOuterQuery(_this, key, base_inner_q, 'base');
 
       // Get the primary query.
-      var primary_inner_q = requestsUtil.makeKeyedInnerQuery(_this, key, ['base_filters', 'primary_filters']);
-      var primary_outer_q = requestsUtil.makeKeyedOuterQuery(_this, key, primary_inner_q, 'primary');
+      var primary_inner_q = RequestsUtil.makeKeyedInnerQuery(_this, key, ['base_filters', 'primary_filters']);
+      var primary_outer_q = RequestsUtil.makeKeyedOuterQuery(_this, key, primary_inner_q, 'primary');
 
       // Assemble the keyed result parameters.
       var keyed_results_parameters = {
@@ -209,7 +213,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
 
     // Define formatter for the view.
     numericFacet.formatter = function(format, value){
-      return formatUtil.GeoRefineFormatter(format, value);
+      return FormatUtil.GeoRefineFormatter(format, value);
     };
   };
 
@@ -292,12 +296,13 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
       if (! qfield){
         return;
       }
+      console.log("here");
 
       // Copy the key entity.
       var key = JSON.parse(JSON.stringify(_this.get('KEY')));
 
       // Assemble request.
-      var keyed_query_req = requestsUtil.makeKeyedQueryRequest(_this, key);
+      var keyed_query_req = RequestsUtil.makeKeyedQueryRequest(_this, key);
       var requests = [];
       requests.push(keyed_query_req);
 
@@ -320,7 +325,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
               id: result['key'],
               label: result['label'],
               count: value,
-              count_label: formatUtil.GeoRefineFormatter(qfield.get('format') || '%s', value)
+              count_label: FormatUtil.GeoRefineFormatter(qfield.get('format') || '%s', value)
             });
           });
           _this.set('choices', choices);
@@ -350,7 +355,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
       _.each(choices, function(choice){
         var label = "";
         if (count_entity && count_entity.format){
-          label = formatUtil.GeoRefineFormatter(count_entity.format || '%s', choice['count']);
+          label = FormatUtil.GeoRefineFormatter(count_entity.format || '%s', choice['count']);
         }
         else{
           label = choice['count'];
@@ -397,6 +402,9 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
   };
 
   var connectFacet = function(facet, opts){
+    var facetsEditor = opts.facetsEditor;
+    var summaryBar = opts.summaryBar;
+
     // Setup the facet's primary filter groups.
     _.each(facet.model.get('primary_filter_groups'), function(filterGroupId, key){
       var filterGroup = opts.filterGroups[filterGroupId];
@@ -414,13 +422,26 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
     _.each(facet.model.get('base_filter_groups'), function(filterGroupId, key){
       var filterGroup = opts.filterGroups[filterGroupId];
       filterGroup.on('change:filters', function(){
-        filtersUtil.updateModelFilters(this, 'base', opts);
+        FiltersUtil.updateModelFilters(this, 'base', opts);
       }, facet.model);
       // Remove callback when model is removed.
       facet.model.on('remove', function(){
         filterGroup.off(null, null, this);
       }, facet.model);
     });
+
+    // Listen for quantity field changes, if not a timeSlider.
+    if (facet.model.get('type') != 'timeSlider'){
+      // Update totals when the summary bar totals change.
+      summaryBar.model.on('change:data', function(){
+        var data = summaryBar.model.get('data');
+        this.set('total', data.total);
+      }, facet.model);
+      // Remove callback when model is removed.
+      facet.model.on('remove', function(){
+        summaryBar.model.off(null, null, this);
+      }, facet.model);
+    }
 
     // Have the facet update when its query or base filters or quantity_field change.
     if (facet.model.getData){
@@ -456,6 +477,24 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
     }
   };
 
+  var disconnectFacet = function(facet, opts){
+    // Remove summaryBar callback.
+    opts.summaryBar.model.off(null, null, facet.model);
+
+    // For each filter group...
+    _.each(['base', 'primary'], function(filterGroupCategory){
+      _.each(facet.model.get(filterGroupCategory + '_filter_groups'), function(filterGroupId, key){
+        var filterGroup = opts.filterGroups[filterGroupId];
+        // Remove callback.
+        filterGroup.off(null, null, facet.model);
+        // Remove from group.
+        filterGroup.remove(facet.model);
+        // Trigger change in group filters.
+        filterGroup.trigger('change:filters');
+      });
+    });
+  };
+
   var actionHandlers = {};
   actionHandlers.facets_addFacet = function(ctx, opts){
     if (opts.fromDefinition){
@@ -477,7 +516,8 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil){
   actionHandlers.facets_connectFacet = function(ctx, opts){
     var facet = ctx.dataView.getFacetView(opts);
     var filterGroups = ctx.dataView.filterGroups;
-    connectFacet(facet, {filterGroups: filterGroups});
+    var summaryBar = ctx.dataView.summaryBar;
+    connectFacet(facet, {filterGroups: filterGroups, summaryBar: summaryBar});
   };
 
   actionHandlers.facets_facetGetData = function(ctx, opts){

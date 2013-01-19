@@ -116,7 +116,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
       _.each(groupIds, function(filterGroupId){
         var filterGroup = filterGroups[filterGroupId];
         filterGroup.on('change:filters', function(){
-          console.log('chango');
+          console.log('chango', filterGroupId);
           var filters = _.clone(summaryBar.model.get(filterCategory + '_filters')) || {};
           filters[filterGroupId] = filterGroup.getFilters();
           summaryBar.model.set(filterCategory + '_filters', filters);

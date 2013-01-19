@@ -7,7 +7,7 @@ require(
 function($, DataViewCss, DataView){
 
   var geoRefineBaseUrl = 'http://localhost:8000/georefine';
-  var projectId = 42;
+  var projectId = 94;
   GeoRefine = {};
   GeoRefine.app = {
     requestsEndpoint: geoRefineBaseUrl + '/projects/execute_requests/' + projectId + '/',
@@ -43,7 +43,7 @@ function($, DataViewCss, DataView){
 
       summaryBar: {
         base_filter_groups: ['scenario'],
-        primary_filter_groups: ['scenario', 'data']
+        primary_filter_groups: ['data']
       },
 
       facetsEditor: {
@@ -79,11 +79,52 @@ function($, DataViewCss, DataView){
               ]
             },
             "id":"timestep"
+          },
+          substrate: {
+            "facetDef":{
+              "info": null,
+              "info_link":"{{PROJECT_STATIC_DIR}}/sasipedia#substrates/index.html",
+              "outer_query":{
+                "GROUP_BY":[{"ID":"substrate_label"}, {"ID":"substrate_id"}],
+                "FROM":[{
+                  "SOURCE":"substrate",
+                  "JOINS":[
+                    ["inner", [{"TYPE":"ENTITY", "EXPRESSION":"__inner__substrate_id"},
+                      "==", {"TYPE":"ENTITY", "EXPRESSION":"__substrate__id" }]]
+                  ]
+                }],
+                "SELECT":[
+                  {"EXPRESSION":"__substrate__id", "ID":"substrate_id" },
+                  {"EXPRESSION":"__substrate__label", "ID":"substrate_label"}
+                ]
+              },
+              "base_filter_groups":["scenario"],
+              "label":"Substrates",
+              "inner_query":{
+                "GROUP_BY":[{"EXPRESSION":"__result__substrate_id","ID":"substrate_id"}],
+                "SELECT":[{"EXPRESSION":"__result__substrate_id", "ID":"substrate_id"}]
+              },
+              "KEY":{
+                "LABEL_ENTITY":{"ID":"substrate_label"},
+                "QUERY":{
+                  "SELECT":[
+                    {"EXPRESSION":"__substrate__id","ID":"substrate_id"},
+                    {"EXPRESSION":"__substrate__label", "ID":"substrate_label"}
+                  ]
+                },
+                "KEY_ENTITY":{"EXPRESSION":"__result__substrate_id","ID":"substrate_id"}
+              },
+              "type":"list",
+              "filter_entity":{"TYPE":"ENTITY", "EXPRESSION":"__result__substrate_id", "ID":"substrate"},
+              "primary_filter_groups":["data"]
+            },
+            "id":"substrate"
           }
         }
       },
       mapEditor: {
-        "max_extent":[-80, 30, -65, 45],
+        //"max_extent":[-80, 30, -65, 45],
+        "max_extent":[-5, -5, 5, 5],
         "graticule_intervals":[2],
         "base_layers":[
           {
@@ -262,7 +303,7 @@ function($, DataViewCss, DataView){
         el: $('#main')
       });
 
-      window.dv.trigger('ready');
+      //window.dv.trigger('ready');
     });
   });
 }
