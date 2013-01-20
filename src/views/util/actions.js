@@ -5,7 +5,7 @@ function($){
 
     var executeActions = function(ctx, actions){
       var deferred = $.Deferred();
-      var actionsFunc = ActionsUtil.processActionQueue(ctx, actions);
+      var actionsFunc = processActionQueue(ctx, actions);
       $.when(actionsFunc()).then(function(){
         deferred.resolve();
       });

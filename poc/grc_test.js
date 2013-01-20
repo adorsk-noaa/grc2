@@ -53,9 +53,11 @@ function($, GeoRefineClientCss, GeoRefineClientView){
 
     cssDeferred.done(function(){
       window.grc = new GeoRefineClientView({
-        model: new Backbone.Model({
-        }),
-        el: $('#main')
+        model: new Backbone.Model({}),
+        el: $('#main'),
+        config: {
+          dataViewConfigurations: dataViewConfigurations
+        }
       });
 
       //window.dv.trigger('ready');

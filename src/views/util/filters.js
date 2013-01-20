@@ -88,7 +88,7 @@ function($, Backbone, _, _s, Util){
   };
 
   // Define deserializeConfigState hook for filter groups.
-  var filterGroups_deserializeConfigState = function(configState, state){
+  var deserializeConfigState = function(configState, state){
     if (! configState.filterGroups){
       return;
     }
@@ -101,7 +101,7 @@ function($, Backbone, _, _s, Util){
       filterGroups[filterGroupDef.id] = filterGroup;
     });
 
-    // Set editor in state object.
+    // Add to state.
     state.filterGroups = filterGroups;
   };
 
@@ -114,9 +114,7 @@ function($, Backbone, _, _s, Util){
     alterStateHooks : [
       filterGroups_alterState
     ],
-    deserializeConfigStateHooks: [
-      filterGroups_deserializeConfigState
-    ]
+    deserializeConfigState: deserializeConfigState
   };
   return filtersUtil;
 });

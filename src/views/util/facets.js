@@ -548,8 +548,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
     state.facetsEditor = serializationUtil.serialize(ctx.facetsEditor.model, state.serializationRegistry);
   };
 
-  // Define deserializeConfigState hook for facets editor.
-  var facetsEditor_deserializeConfigState = function(configState, deserializedState){
+  var deserializeConfigState = function(configState, deserializedState){
     if (! configState.facetsEditor){
       return;
     }
@@ -571,9 +570,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
   var exports = {
     createFacetsEditor: createFacetsEditor,
     actionHandlers: actionHandlers,
-    deserializeConfigStateHooks: [
-      facetsEditor_deserializeConfigState
-    ],
+    deserializeConfigState: deserializeConfigState,
     postInitializeHooks: [
       facetsEditor_postInitialize
     ]

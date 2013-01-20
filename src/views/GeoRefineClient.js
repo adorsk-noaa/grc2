@@ -132,7 +132,14 @@ function(Backbone, _, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUti
     },
 
     addDataView: function(){
-      FloatingDataViewsUtil.createFloatingDataView(this);
+      // @TODO: get this dynamically.
+      var dataViewConfig = this.config.dataViewConfigurations['__result__z'];
+      FloatingDataViewsUtil.addFloatingDataView(
+        this,
+        {
+          dataView: {config: dataViewConfig}
+        }
+      );
     }
 
   });

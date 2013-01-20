@@ -28,7 +28,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
       $(_this.el).addClass('dataview');
 
-      _this.config = _this.model.get('config');
+      _this.config = opts.config;
 
       this.on('ready', this.onReady, this);
 
@@ -40,7 +40,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
         _this.state = StateUtil.deserializeState(opts.serializedState);
       }
       else{
-        _this.state = StateUtil.deserializeConfigState(_this.config.defaultInitialState);
+        _this.state = _this.deserializeConfigState(_this.config.defaultInitialState);
       }
 
       _this.initialRender();
@@ -51,13 +51,29 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
       _this.setupActionHandlers();
 
-      var actionsDeferred = ActionsUtil.executeActions(_this, _this.config.initialActions);
+      var actionsDeferred = null;
+      if (_this.config.initialActions){
+        actionsDeferred = ActionsUtil.executeActions(_this, _this.config.initialActions);
+      }
+      else{
+        actionsDeferred = $.Deferred();
+        actionsDeferred.resolve();
+      }
       actionsDeferred.done(function(){
         console.log("done with actions");
         _this.initialized = true;
         _this.trigger("ready");
         _this.postInitialize();
       });
+    },
+
+    deserializeConfigState: function(configState){
+      var state = {};
+      FiltersUtil.deserializeConfigState(configState, state);
+      FacetsUtil.deserializeConfigState(configState, state);
+      SummaryBarUtil.deserializeConfigState(configState, state);
+      MapUtil.deserializeConfigState(configState, state);
+      return state;
     },
 
     postInitialize: function(){

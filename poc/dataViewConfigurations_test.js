@@ -226,8 +226,11 @@ defaultSummaryBar = {
 
 resultDataViewConfigurations = {
   __result__z: {
+    defaultInitialState: {
       qField: resultQFields['z'],
-      facets: resultFacets,
+      facetsEditor: {
+        predefined_facets: resultFacets
+      },
       mapEditor: {
         "max_extent":[-5, -5, 5, 5],
         "graticule_intervals":[2],
@@ -250,6 +253,7 @@ resultDataViewConfigurations = {
       defaultInitialActions: resultDefaultInitialActions,
       filterGroups: defaultFilterGroups,
       summaryBar : defaultSummaryBar
+    }
   }
 };
 

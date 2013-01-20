@@ -47,7 +47,7 @@ function($, Backbone, _, _s, Util, FiltersUtil, FormatUtil, SerializationUtil, R
     return mapEditorView;
   };
 
-  var mapEditor_deserializeConfigState = function(configState, deserializedState){
+  var deserializeConfigState = function(configState, deserializedState){
     if (! configState.mapEditor){
       return;
     }
@@ -423,9 +423,7 @@ function($, Backbone, _, _s, Util, FiltersUtil, FormatUtil, SerializationUtil, R
   var exports = {
     createMapEditor: createMapEditor,
     actionHandlers: actionHandlers,
-    deserializeConfigStateHooks: [
-      mapEditor_deserializeConfigState
-    ],
+    deserializeConfigState: deserializeConfigState
   };
   return exports;
 });

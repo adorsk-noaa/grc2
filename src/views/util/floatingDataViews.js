@@ -6,8 +6,9 @@ define([
        "Util",
        "Windows",
        "./serialization",
+       "../DataView",
 ],
-function($, Backbone, _, _s, Util, Windows, serializationUtil){
+function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
 
   var setUpWindows = function(ctx){
     $.window.prepare({
@@ -28,6 +29,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil){
     // Initialize floating data views registry.
     ctx.dataViews.floatingDataViews = dvState.floatingDataViews || {};
 
+    // @TODO: change this for new style.
     // Create any initial data views.
     _.each(ctx.dataViews.floatingDataViews, function(floatingDataViewModel){
       addFloatingDataView(floatingDataViewModel);
@@ -40,6 +42,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil){
 
     initialize: function(opts){
       this.ctx = opts.ctx;
+      this.opts = opts;
       this.initialRender();
 
       // Connect window events to data view.
@@ -73,14 +76,11 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil){
     },
 
     initialRender: function(){
-      this.renderDataView();
       this.renderWindow();
+      this.renderDataView();
       if (this.dataView && this.dataView.el){
         $(this.window.getBody()).append(this.dataView.el);
       }
-    },
-
-    renderDataView: function(){
     },
 
     renderWindow : function(){
@@ -94,6 +94,12 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil){
         caller: $dataViews,
         //containment: $(this.ctx.dataViews.constraint)
       });
+    },
+
+    renderDataView: function(){
+      this.dataView = new DataView(_.extend({
+        model: new Backbone.Model()
+      }, this.opts.dataView));
     },
 
     onReady: function(){
@@ -112,17 +118,17 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil){
     }
   });
 
-  var addFloatingDataView = function(ctx, model){
-    // Set default id if none given.
-    if (! model.id){
-      model.id = model.cid;
-    }
+  var addFloatingDataView = function(ctx, opts){
+
+    var model = new Backbone.Model({
+      id: opts.id || Math.random()
+    });
 
     // Create floating data view.
-    var floatingDataView = new FloatingDataViewView({
+    var floatingDataView = new FloatingDataViewView(_.extend({
       model: model,
       ctx: ctx
-    });
+    }, opts));
 
     // Register the floating data view.
     ctx.dataViews.floatingDataViews[model.id] = floatingDataView;
@@ -181,25 +187,6 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil){
     return new Backbone.Model();
   };
 
-  // Create a new floating data view from config defaults.
-  var createFloatingDataView = function(ctx, opts){
-    opts = opts || {};
-    opts.dataView = opts.dataView || {};
-    opts.window = opts.window || {};
-
-    var windowModel = createDefaultWindowModel(ctx, opts.window);
-    var dataViewModel = createDataViewModel(ctx, opts.dataView);
-
-    var floatingDataViewModel = new Backbone.Model({
-      id: opts.id || Math.random(),
-      window: windowModel,
-      dataView: dataViewModel,
-      ctx: ctx
-    });
-
-    addFloatingDataView(ctx, floatingDataViewModel);
-  };
-
   var actionHandlers = {};
   actionHandlers.dataViews_createFloatingDataView = function(opts){
     createFloatingDataView(opts);
@@ -241,7 +228,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil){
     actionHandlers: actionHandlers,
     setUpDataViews: setUpDataViews,
     setUpWindows: setUpWindows,
-    createFloatingDataView: createFloatingDataView,
+    addFloatingDataView: addFloatingDataView,
     alterStateHooks: [
       dataViews_alterState
     ],

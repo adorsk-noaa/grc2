@@ -179,7 +179,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
   };
 
   // Define deserializeConfigState hook for facets editor.
-  var summaryBar_deserializeConfigState = function(configState, deserializedState){
+  var deserializeConfigState = function(configState, deserializedState){
     if (! configState.summaryBar){
       return;
     }
@@ -192,9 +192,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
     connectSummaryBar: connectSummaryBar,
     initializeSummaryBar: initializeSummaryBar,
     actionHandlers: actionHandlers,
-    deserializeConfigStateHooks: [
-      summaryBar_deserializeConfigState
-    ],
+    deserializeConfigState: deserializeConfigState,
   };
   return exports;
 });
