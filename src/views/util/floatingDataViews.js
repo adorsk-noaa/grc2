@@ -81,14 +81,12 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil){
     },
 
     renderDataView: function(){
-      console.log("render dv");
     },
 
     renderWindow : function(){
       var $dataViews = $(this.ctx.dataViews.container);
       var dvOffset = $dataViews.offset();
 
-      console.log("dv: ", this.ctx);
       this.window = new Windows.views.WindowView({
         model: this.model.get('window'),
         minimizable: false,
