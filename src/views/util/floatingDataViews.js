@@ -25,6 +25,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
       height: 300
     };
     ctx.dataViews.container = $('.data-views-container', ctx.el);
+    ctx.dataViews.constraint = $('.data-views-constraint', ctx.el);
 
     // Initialize floating data views registry.
     ctx.dataViews.floatingDataViews = dvState.floatingDataViews || {};
@@ -94,7 +95,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
         minimizable: false,
         maximizable: false,
         caller: $dataViews,
-        //containment: $(this.ctx.dataViews.constraint)
+        containment: $(this.ctx.dataViews.constraint)
       });
     },
 

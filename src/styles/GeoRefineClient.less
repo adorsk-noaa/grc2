@@ -12,16 +12,25 @@
 @import 'DataView.less';
 
 .georefine-client{
-  > table {
-    border: thin solid black;
+  > .inner {
     height: 100%;
     width: 100%;
-    > tbody > tr > td {
-      vertical-align: top;
+    position: relative;
+
+    > .header-cell{
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1.5em;
     }
 
-    .header-row {
-      height: 0;
+    > .data-views-cell{
+      position: absolute;
+      top: 1.5em;
+      bottom: 0;
+      left: 0;
+      right: 0;
     }
   }
 
@@ -30,5 +39,14 @@
     height: 100%;
     position: relative;
     overflow: scroll;
+  }
+
+  .data-views-constraint {
+    position: absolute;
+    visibility: hidden;
+    top: 0;
+    left: 0;
+    width: 3000px;
+    height: 3000px;
   }
 }
