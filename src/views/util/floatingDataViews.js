@@ -32,13 +32,13 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     // @TODO: change this for new style.
     // Create any initial data views.
     _.each(ctx.dataViews.floatingDataViews, function(floatingDataViewModel){
-      addFloatingDataView(floatingDataViewModel);
+      addFloatingDataView(ctx, floatingDataViewModel);
     });
   };
 
 
   // View that combines DataView and Window models.
-  var FloatingDataViewView = Backbone.View.extend({
+  var FloatingDataView = Backbone.View.extend({
 
     initialize: function(opts){
       this.ctx = opts.ctx;
@@ -87,8 +87,10 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
       var $dataViews = $(this.ctx.dataViews.container);
       var dvOffset = $dataViews.offset();
 
+      var windowModel = createDefaultWindowModel(this.ctx, this.opts.window);
+
       this.window = new Windows.views.WindowView({
-        model: this.model.get('window'),
+        model: windowModel,
         minimizable: false,
         maximizable: false,
         caller: $dataViews,
@@ -125,7 +127,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     });
 
     // Create floating data view.
-    var floatingDataView = new FloatingDataViewView(_.extend({
+    var floatingDataView = new FloatingDataView(_.extend({
       model: model,
       ctx: ctx
     }, opts));

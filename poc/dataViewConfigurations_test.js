@@ -1,5 +1,6 @@
 resultFacets = {
   __result__t: {
+    "id": "timestep",
     "noClose":true,
     "choices":[],
     "value_type":"numeric",
@@ -29,6 +30,7 @@ resultFacets = {
     ]
   },
   __result__substrate_id: {
+    "id": "substrate",
     "info": null,
     "info_link":"{{PROJECT_STATIC_DIR}}/sasipedia#substrates/index.html",
     "outer_query":{
@@ -250,10 +252,10 @@ resultDataViewConfigurations = {
         "primary_filter_groups":["data"],
         "base_filter_groups":["scenario"]
       },
-      defaultInitialActions: resultDefaultInitialActions,
       filterGroups: defaultFilterGroups,
       summaryBar : defaultSummaryBar
-    }
+    },
+    initialActions: resultDefaultInitialActions
   }
 };
 

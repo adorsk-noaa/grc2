@@ -158,21 +158,21 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
 
   // Initialize summary bar.  Sets filters, qField.
   actionHandlers.summaryBar_initialize = function(ctx, opts){
-    var summaryBar = ctx.dataView.summaryBar;
-    initializeSummaryBar({summaryBar: summaryBar, qField: ctx.dataView.qField, filterGroups: ctx.dataView.filterGroups});
+    var summaryBar = ctx.summaryBar;
+    initializeSummaryBar({summaryBar: summaryBar, qField: ctx.qField, filterGroups: ctx.filterGroups});
   };
 
   // Connect summaryBar.
   actionHandlers.summaryBar_connect = function(ctx, opts){
     connectSummaryBar({
-      summaryBar: ctx.dataView.summaryBar,
-      filterGroups: ctx.dataView.filterGroups
+      summaryBar: ctx.summaryBar,
+      filterGroups: ctx.filterGroups
     })
   };
 
   // getData action handler.
   actionHandlers.summaryBar_getData = function(ctx, opts){
-    var summaryBar = ctx.dataView.summaryBar;
+    var summaryBar = ctx.summaryBar;
     if (summaryBar.model.getData){
       return summaryBar.model.getData(opts);
     }

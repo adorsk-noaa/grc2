@@ -8,9 +8,10 @@ define([
        './util/summaryBar',
        './util/state',
        './util/map',
-       'text!./templates/DataView.html'
+       'text!./templates/DataView.html',
+       'Util'
 ],
-function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil, DataViewTemplate){
+function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil, DataViewTemplate, Util){
 
   var UtilModules = [ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil];
 
@@ -69,6 +70,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     deserializeConfigState: function(configState){
       var state = {};
+      state.qField = new Backbone.Model(configState.qField);
       FiltersUtil.deserializeConfigState(configState, state);
       FacetsUtil.deserializeConfigState(configState, state);
       SummaryBarUtil.deserializeConfigState(configState, state);
@@ -82,14 +84,10 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       this.on('resize', this.resize, this);
       this.on('resizeStop', this.resizeStop, this);
 
-      var ctx = {
-        dataView: this
-      };
-
       // Call post initialize hooks.
       _.each(UtilModules, function(module){
         _.each(module.postInitializeHooks, function(hook){
-          hook(ctx, {});
+          hook(_this, {});
         });
       });
 
@@ -103,6 +101,8 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     initialRender: function(){
       $(this.el).html(_.template(DataViewTemplate, {}));
+      this.$table = $('> table', this.el);
+      this.$rightTable = $('.right-cell-table', this.el);
     },
 
     setupFilterGroups: function(){
@@ -117,6 +117,11 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       this.setupSummaryBar();
       this.setupFacetsEditor();
       this.setupMapEditor();
+      this.subViews = {
+        summaryBar: this.summaryBar,
+        facetsEditor: this.facetsEditor,
+        mapEditor: this.mapEditor
+      };
     },
 
     setupFacetsEditor: function(){
@@ -148,11 +153,15 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     },
 
     resize: function(){
-      this.facetsEditor.trigger('resize');
-      this.mapEditor.trigger('resize');
+      _.each(this.subViews, function(subView){
+        subView.trigger('resize');
+      }, this);
     },
 
     resizeStop: function(){
+      _.each(this.subViews, function(subView){
+        subView.trigger('resizeStop');
+      }, this);
     },
 
     onReady: function(){

@@ -22,9 +22,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
         GRFacetClass = BaseFacetClass.extend({
           formatter: function(){
             var orig = BaseFacetClass.prototype.formatter.apply(this, arguments);
-            // @TODO
-            return orig;
-            //return FormatUtil.GeoRefineTokenFormatter(orig);
+            return FormatUtil.GeoRefineTokenFormatter(orig);
           }
         });
         return GRFacetClass;
@@ -35,9 +33,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
     var GRFacetsEditorView = FacetsEditorView.extend({
       formatter: function(){
         var orig = FacetsEditorView.prototype.formatter.apply(this, arguments);
-        // @TODO
-        return orig;
-        //return FormatUtil.GeoRefineTokenFormatter(orig);
+        return FormatUtil.GeoRefineTokenFormatter(orig);
       },
       getFacetCollectionViewClass: function(){
         return GRFacetCollectionView;
@@ -67,21 +63,21 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
 
   // Define postInitialize hook.
   var facetsEditor_postInitialize = function(ctx, opts){
-    var facetsEditor = ctx.dataView.facetsEditor;
-    var summaryBar = ctx.dataView.summaryBar;
+    var facetsEditor = ctx.facetsEditor;
+    var summaryBar = ctx.summaryBar;
 
     // Initialize and connect newly created facets.
     var facetCollectionView = facetsEditor.subViews.facets;
     if (facetCollectionView){
-      facetCollectionView.on('addFacetView', function(view){
-        initializeFacet(view, {qField: ctx.dataView.qField, filterGroups: ctx.dataView.filterGroups});
-        connectFacet(view, {filterGroups: ctx.dataView.filterGroups, summaryBar: summaryBar});
-        if (view.model.getData){
+      facetCollectionView.on('addFacetView', function(facet){
+        initializeFacet(facet, ctx);
+        connectFacet(facet, ctx);
+        if (facet.model.getData){
           var getDataOpts = {};
-          if (view.model.get('type') == 'numeric'){
+          if (facet.model.get('type') == 'numeric'){
             getDataOpts.updateRange = true;
           }
-          view.model.getData(getDataOpts);
+          facet.model.getData(getDataOpts);
         }
       });
     }
@@ -503,37 +499,36 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
   var actionHandlers = {};
   actionHandlers.facets_addFacet = function(ctx, opts){
     if (opts.fromDefinition){
-      var predefinedFacets = ctx.dataView.facetsEditor.model.get('predefined_facets');
-      var facetDefModel = predefinedFacets.get(opts.defId);
-      var facetDef = facetDefModel.get('facetDef');
+      var predefinedFacets = ctx.facetsEditor.model.get('predefined_facets');
+      var facetDef = predefinedFacets.get(opts.defId).toJSON();
       facetDef.id = opts.facetId;
-      var facetModel = ctx.dataView.facetsEditor.createFacetModelFromDef(facetDef);
-      ctx.dataView.facetsEditor.model.get('facets').add(facetModel);
+      var facetModel = ctx.facetsEditor.createFacetModelFromDef(facetDef);
+      ctx.facetsEditor.model.get('facets').add(facetModel);
     }
   };
 
   actionHandlers.facets_initializeFacet = function(ctx, opts){
-    var facet = ctx.dataView.getFacetView(opts);
-    var filterGroups = ctx.dataView.filterGroups;
+    var facet = ctx.getFacetView(opts);
+    var filterGroups = ctx.filterGroups;
     initializeFacet(facet, {filterGroups: filterGroups});
   };
 
   actionHandlers.facets_connectFacet = function(ctx, opts){
-    var facet = ctx.dataView.getFacetView(opts);
-    var filterGroups = ctx.dataView.filterGroups;
-    var summaryBar = ctx.dataView.summaryBar;
+    var facet = ctx.getFacetView(opts);
+    var filterGroups = ctx.filterGroups;
+    var summaryBar = ctx.summaryBar;
     connectFacet(facet, {filterGroups: filterGroups, summaryBar: summaryBar});
   };
 
   actionHandlers.facets_facetGetData = function(ctx, opts){
-    var facet = ctx.dataView.getFacetView(opts);
+    var facet = ctx.getFacetView(opts);
     if (facet.model.getData){
       return facet.model.getData(opts);
     }
   };
 
   actionHandlers.facets_facetSetSelection = function(ctx, opts){
-    var facet = ctx.dataView.getFacetView(opts);
+    var facet = ctx.getFacetView(opts);
     if (facet.model.get('type') == 'timeSlider'){
       if (opts.index != null){
         var choice = facet.model.get('choices')[opts.index];

@@ -417,7 +417,7 @@ function($, Backbone, _, _s, Util, FiltersUtil, FormatUtil, SerializationUtil, R
 
   var actionHandlers = {};
   actionHandlers.mapEditor_initializeMapEditor = function(ctx, opts){
-    initializeMapEditor(ctx.dataView.mapEditor, {filterGroups: ctx.dataView.filterGroups});
+    initializeMapEditor(ctx.mapEditor, {filterGroups: ctx.filterGroups});
   };
 
   var exports = {

@@ -19,7 +19,7 @@ function($){
         handler = action.handler;
       }
       else{
-        handler = ctx.handlers[action.handler];
+        handler = ctx.actionHandlers[action.handler];
       }
       return function(){
         return handler(ctx, action.opts);

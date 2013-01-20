@@ -10,36 +10,54 @@
 @import url("require:ui/css/smoothness/jquery-ui-1.9.1.custom.css");
 
 .dataview{
-  > table {
-    height: 100%;
+  padding: 5px 5px 10px 5px;
+  > .inner{
+    position: relative;
+    overflow: scroll;
     width: 100%;
-    > tbody > tr > td {
-      vertical-align: top;
+    height: 100%;
+
+    .left-cell{
+      position: absolute;
+      width: 260px;
+      left: 0;
+      top: 0;
+      bottom: 0;
     }
-  }
 
-  .left-cell{
-    width: 260px;
-  }
+    .right-cell{
+      position: absolute;
+      left: 260px;
+      right: 0;
+      top: 0;
+      bottom: 0;
 
-  .right-cell{
-    width: auto;
-    .right-cell-table{
-      height: 100%;
-      width: 100%;
+      .summary-bar-cell {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 5em;
+        padding: 10px;
+      }
 
       .map-editor-cell {
-        height: 100%;
+        position: absolute;
+        top: 5em;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        padding: 10px;
       }
     }
-  }
 
-  .facets-editor {
-    height: 100%;
-  }
+    .facets-editor {
+      height: 100%;
+    }
 
-  .map-editor {
-    height: 100%;
-    width: 100%;
+    .map-editor {
+      height: 100%;
+      width: 100%;
+    }
   }
 }
