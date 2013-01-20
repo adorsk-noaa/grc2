@@ -296,7 +296,6 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
       if (! qfield){
         return;
       }
-      console.log("here");
 
       // Copy the key entity.
       var key = JSON.parse(JSON.stringify(_this.get('KEY')));
@@ -457,12 +456,18 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
             && changes.changes['base_filters']){
               getDataOpts.updateRange = true;
             }
-            facet.model.getData(getDataOpts);
+            var getDataDeferred = facet.model.getData(getDataOpts);
+            getDataDeferred.always(function(){
+              $(facet.el).removeClass('loading');
+            });
             facet.model.set('_fetch_timeout', null);
         }, delay);
       };
 
       facet.model.on('change:primary_filters change:base_filters change:quantity_field', function(){
+
+        $(facet.el).addClass('loading');
+
         var changes = arguments[2];
         // We delay the get data call a little, in case multiple things are changing.
         // The last change will get executed.

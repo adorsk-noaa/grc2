@@ -3,6 +3,15 @@ define([
 ],
 function($){
 
+    var executeActions = function(ctx, actions){
+      var deferred = $.Deferred();
+      var actionsFunc = ActionsUtil.processActionQueue(ctx, actions);
+      $.when(actionsFunc()).then(function(){
+        deferred.resolve();
+      });
+      return deferred;
+    };
+
     var processAction = function(ctx, action){
       // Convert an action definition to an action function.
       var handler = null;
@@ -83,6 +92,7 @@ function($){
     };
 
     var exports = {
+      executeActions: executeActions,
       processActionQueue: processActionQueue
     };
 

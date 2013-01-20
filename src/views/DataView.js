@@ -33,33 +33,30 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       this.on('ready', this.onReady, this);
 
       // Deserialize state.
-      var stateDeferred = $.Deferred();
+      if (opts.state){
+        _this.state = opts.state;
+      }
       if (opts.serializedState){
         _this.state = StateUtil.deserializeState(opts.serializedState);
-        stateDeferred.resolve();
       }
       else{
         _this.state = StateUtil.deserializeConfigState(_this.config.defaultInitialState);
-        stateDeferred.resolve();
       }
 
-      // When stateDeferred resolves, continue...
-      stateDeferred.then(function(){
-        _this.initialRender();
+      _this.initialRender();
 
-        _this.qField = _this.state.qField;
-        _this.setupFilterGroups();
-        _this.setupWidgets();
+      _this.qField = _this.state.qField;
+      _this.setupFilterGroups();
+      _this.setupWidgets();
 
-        _this.setupActionHandlers();
+      _this.setupActionHandlers();
 
-        var actionsDeferred = _this.processActions(_this.config.initialActions);
-        actionsDeferred.done(function(){
-          console.log("done with actions");
-          _this.initialized = true;
-          _this.trigger("ready");
-          _this.postInitialize();
-        });
+      var actionsDeferred = ActionsUtil.executeActions(_this, _this.config.initialActions);
+      actionsDeferred.done(function(){
+        console.log("done with actions");
+        _this.initialized = true;
+        _this.trigger("ready");
+        _this.postInitialize();
       });
     },
 
@@ -145,21 +142,6 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     onReady: function(){
       this.resize();
       this.mapEditor.trigger('ready');
-    },
-
-    processActions: function(actions){
-      var deferred = $.Deferred();
-      var ctx = {
-        dataView: this,
-        handlers: this.actionHandlers,
-      };
-      var actionsFunc = ActionsUtil.processActionQueue(ctx, actions);
-
-      $.when(actionsFunc()).then(function(){
-        deferred.resolve();
-      });
-
-      return deferred;
     },
 
     getFacetView: function(opts){

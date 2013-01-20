@@ -87,4 +87,12 @@ assets = {
         'unzip': True,
         'path': 'OpenLayers-2.12' 
     },
+    'windows': {
+        'type': 'git',
+        'source': 'https://github.com/adorsk-noaa/bb_window.git'
+    },
+    'jquery.window': {
+        'type': 'git',
+        'source': 'https://github.com/adorsk/jquery.window.git'
+    }
 }
