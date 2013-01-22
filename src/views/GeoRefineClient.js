@@ -10,7 +10,7 @@ function(Backbone, _, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUti
 
   var GeoRefineClientView = Backbone.View.extend({
     events: {
-      'click .add-view-button': 'addDataView'
+      'click .addView': 'addDataView'
     },
 
     initialize: function(opts){
@@ -118,8 +118,13 @@ function(Backbone, _, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUti
     },
 
     initialRender: function(){
+      var _this = this;
       var html = _.template(GeoRefineClientTemplate, {model: this.model});
       $(this.el).html(html);
+      this.$qFieldSelector = $('#qFieldSelector');
+      _.each(this.config.dataViewConfigurations, function(dvConfig, key){
+        $('<option value="' + key + '">' + key + '</option>').appendTo(_this.$qFieldSelector);
+      });
       FloatingDataViewsUtil.setUpWindows(this);
       FloatingDataViewsUtil.setUpDataViews(this);
     },
@@ -133,7 +138,8 @@ function(Backbone, _, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUti
 
     addDataView: function(){
       // @TODO: get this dynamically.
-      var dataViewConfig = this.config.dataViewConfigurations['__result__z'];
+      var configKey = this.$qFieldSelector.val();
+      var dataViewConfig = this.config.dataViewConfigurations[configKey];
       FloatingDataViewsUtil.addFloatingDataView(
         this,
         {
