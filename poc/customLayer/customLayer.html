@@ -4,6 +4,15 @@
 
 	<script src="../local_config.js"></script>
 	<script src="../../require_config.js"></script>
+    <script>
+        for (var i in require.packages){
+            var p = require.packages[i];
+            if (p.name == 'openlayers'){
+                p.location = 'poc/customLayer/openlayers';
+                p.main = 'OpenLayers.dev.js';
+            }
+        }
+    </script>
     <script src="../../assets/js/require.js"></script>
     <script src="customLayer.js"></script>
 
