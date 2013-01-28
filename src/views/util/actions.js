@@ -34,7 +34,7 @@ function($){
             var deferred = $.Deferred();
 
             // If there were child actions...
-            if (_actionQueue.actions.length > 0){
+            if (_actionQueue.actions && _actionQueue.actions.length > 0){
 
                 // Convert child actions into action functions.
                 var actionFuncs = [];

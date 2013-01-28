@@ -13,90 +13,44 @@ define([
 ],
 function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil, DataViewTemplate, Util){
 
-  var UtilModules = [ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil];
+  var hookModules = [FacetsUtil, FiltersUtil, SummaryBarUtil, MapUtil];
 
   var DataView = Backbone.View.extend({
 
     initialize: function(opts){
       var _this = this;
-      opts = _.extend({
-        config: {}
-      }, opts);
 
-      opts.config = _.extend({
-        defaultInitialState: {}
-      }, opts.config);
+      $(this.el).addClass('dataview');
 
-      $(_this.el).addClass('dataview');
+      this.initialRender();
 
-      _this.config = opts.config;
+      this.initializeFilterGroups();
+      this.initializeWidgets();
 
-      this.on('ready', this.onReady, this);
+      this.setupActionHandlers();
 
-      // Deserialize state.
-      if (opts.state){
-        _this.state = opts.state;
-      }
-      if (opts.serializedState){
-        _this.state = StateUtil.deserializeState(opts.serializedState);
+      var initialActionsDeferred = null;
+      var initialActions = this.model.get('initialActions') || {};
+      if (initialActions){
+        initialActionsDeferred = ActionsUtil.executeActions(this, initialActions);
       }
       else{
-        _this.state = _this.deserializeConfigState(_this.config.defaultInitialState);
+        initialActionsDeferred = $.Deferred();
+        initialActionsDeferred.resolve();
       }
+      initialActionsDeferred.done(function(){
+        console.log("done with initialActions");
 
-      _this.initialRender();
-
-      _this.qField = _this.state.qField;
-      _this.setupFilterGroups();
-      _this.setupWidgets();
-
-      _this.setupActionHandlers();
-
-      var actionsDeferred = null;
-      if (_this.config.initialActions){
-        actionsDeferred = ActionsUtil.executeActions(_this, _this.config.initialActions);
-      }
-      else{
-        actionsDeferred = $.Deferred();
-        actionsDeferred.resolve();
-      }
-      actionsDeferred.done(function(){
-        console.log("done with actions");
-        _this.initialized = true;
-        _this.trigger("ready");
-        _this.postInitialize();
-      });
-    },
-
-    deserializeConfigState: function(configState){
-      var state = {};
-      state.qField = new Backbone.Model(configState.qField);
-      FiltersUtil.deserializeConfigState(configState, state);
-      FacetsUtil.deserializeConfigState(configState, state);
-      SummaryBarUtil.deserializeConfigState(configState, state);
-      MapUtil.deserializeConfigState(configState, state);
-      return state;
-    },
-
-    postInitialize: function(){
-      var _this = this;
-      // Listen for window resize events.
-      this.on('resize', this.resize, this);
-      this.on('resizeStop', this.resizeStop, this);
-
-      // Call post initialize hooks.
-      _.each(UtilModules, function(module){
-        _.each(module.postInitializeHooks, function(hook){
-          hook(_this, {});
+        // Do default actions.
+        var defaultActionsDeferred = _this.executeDefaultActions();
+        defaultActionsDeferred.done(function(){
+          console.log("done with defaultActions");
+          _this.initialized = true;
+          _this.postInitialize();
+          _this.on('ready', _this.onReady, _this);
+          _this.trigger("ready");
         });
       });
-
-      // Setup infotips.
-      /*
-      GeoRefineViewsUtil.infotipsUtil.setUpInfotips({
-        el: this.el
-      });
-      */
     },
 
     initialRender: function(){
@@ -105,15 +59,12 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       this.$rightTable = $('.right-cell-table', this.el);
     },
 
-    setupFilterGroups: function(){
+    initializeFilterGroups: function(){
       var _this = this;
-      _this.filterGroups = _this.state.filterGroups;
-      _.each(_this.filterGroups, function(filterGroup, filterGroupId){
-        FiltersUtil.decorateFilterGroup(filterGroup, filterGroupId);
-      });
+      this.filterGroups = this.model.get('filterGroups') || new Backbone.Collection();
     },
 
-    setupWidgets: function(){
+    initializeWidgets: function(){
       this.setupSummaryBar();
       this.setupFacetsEditor();
       this.setupMapEditor();
@@ -124,32 +75,66 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       };
     },
 
+    setupSummaryBar: function(){
+      this.summaryBar = SummaryBarUtil.createSummaryBar({
+        model: this.model.get('summaryBar') || new Backbone.Model(),
+        el: $('.summary-bar', this.el)
+      });
+    },
+
     setupFacetsEditor: function(){
       this.facetsEditor = FacetsUtil.createFacetsEditor({
-        model: this.state.facetsEditor,
-        config: this.config.facets,
+        model: this.model.get('facetsEditor') || new Backbone.Model(),
         el: $('.facets-editor', this.el),
         filterGroups: this.filterGroups,
         summaryBar: this.summaryBar
       });
     },
 
-    setupSummaryBar: function(){
-      this.summaryBar = SummaryBarUtil.createSummaryBar({
-        model: this.state.summaryBar,
-        el: $('.summary-bar', this.el)
-      });
-    },
-
     setupMapEditor: function(){
       this.mapEditor = MapUtil.createMapEditor({
-        model: this.state.mapEditor,
+        model: this.model.get('mapEditor') || new Backbone.Model(),
         el: $('.map-editor', this.el)
       });
     },
 
-    setupInitialState: function(){
-      console.log('setupInitialState');
+    postInitialize: function(){
+      var _this = this;
+      // Listen for window resize events.
+      this.on('resize', this.resize, this);
+      this.on('resizeStop', this.resizeStop, this);
+
+      // Call post initialize hooks.
+      /*
+      _.each(UtilModules, function(module){
+        _.each(module.postInitializeHooks, function(hook){
+          hook(_this, {});
+        });
+      });
+      */
+
+      // Setup infotips.
+      /*
+      GeoRefineViewsUtil.infotipsUtil.setUpInfotips({
+        el: this.el
+      });
+      */
+    },
+
+    // Not sure on this yet...here or in postInitialize? postInitializeActions?
+    // goals is to make it possiblef or things like vectorLayers to fetch data,
+    // and block execution until they resolve.
+    executeDefaultActions: function(){
+      var defaultActions = {
+        async: false,
+        actions: [
+          {
+          handler: "facetsEditor_initializeFacetsEditor",
+          type: "action"
+        }
+        ]
+      };
+      return ActionsUtil.executeActions(this, defaultActions);
     },
 
     resize: function(){
