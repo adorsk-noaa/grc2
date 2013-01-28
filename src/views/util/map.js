@@ -117,6 +117,8 @@ function($, Backbone, _, _s, Util, FiltersUtil, FormatUtil, SerializationUtil, R
         }
       });
     }
+    else if (layerDef.source == 'georefine_vector_data_layer'){
+    }
     else if (layerDef.source == 'georefine_wms_layer'){
       var service_url = _s.sprintf("%s/%s/wms", GeoRefine.app.WMSLayerEndpoint, layerModel.id);
       layerModel.set('service_url', service_url);

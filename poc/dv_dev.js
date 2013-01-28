@@ -140,6 +140,7 @@ function($, DataViewCss, DataView){
         "overlay_layers":[],
         "base_filter_groups":["scenario"],
         "data_layers": [
+          /*
           {
           "layer_type":"WMS",
           "geom_id_entity":{"ID":"z_geom_id"},
@@ -175,6 +176,7 @@ function($, DataViewCss, DataView){
           "layer_category":"data",
           "id":"z"
         }
+          */
         ],
         "default_layer_options":{
           "transitionEffect":"resize",
@@ -297,9 +299,8 @@ function($, DataViewCss, DataView){
 
     cssDeferred.done(function(){
       window.dv = new DataView({
-        model: new Backbone.Model({
-          config: dvConfig
-        }),
+        model: new Backbone.Model({ }),
+        config: dvConfig
         el: $('#main')
       });
 

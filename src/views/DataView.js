@@ -166,7 +166,9 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     onReady: function(){
       this.resize();
-      this.mapEditor.trigger('ready');
+      _.each(this.subViews, function(subView){
+        subView.trigger('ready');
+      }, this);
     },
 
     getFacetView: function(opts){
