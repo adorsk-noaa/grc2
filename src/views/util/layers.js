@@ -1,18 +1,34 @@
 define([
        'backbone',
        'underscore',
+       './filters',
 ],
-function(Backbone, _){
+function(Backbone, _, FiltersUtil){
 
   /*
    * Define custom functions.
    */
   var vectorDataLayerGetData = function(){
-    console.log('vdlgd');
+    console.log('vdlgd', this);
+    var features = this.get('features');
+
+    _.each(features.models, function(featureModel){
+      var props = featureModel.get('properties');
+      props.set({p1: props.get('p1') * this.get('query')});
+    }, this);
+
   };
 
   var vectorDataLayerUpdateQuery = function(){
-    console.log('vdluq');
+    console.log('vdluq', this);
+    console.log(this.get('primary_filters'));
+    var val = 3;
+    try {
+      val = this.get('primary_filters').data[0].filters[0][2];
+    }
+    catch (err){
+    }
+    this.set('query', val + 1);
   };
 
 
@@ -28,10 +44,10 @@ function(Backbone, _){
     layer.model.onDisabledChange = function(){
       layer.model.set('visible', ! layer.model.get('disabled'));
       if (layer.model.get('disabled')){
-        disconnectLayer(layer);
+        disconnectLayer(layer, opts);
       }
       else{
-        connectLayer(layer);
+        connectLayer(layer, opts);
       }
     };
     layer.model.on('change:disabled', function(){
@@ -43,8 +59,47 @@ function(Backbone, _){
   layerDecorators['VectorData'] = function(layer, opts){
     console.log("decorate VectorData Layer");
     layerDecorators['default'](layer, opts);
-    layer.model.updateQuery = vectorDataLayerUpdateQuery;
-    layer.model.getData = vectorDataLayerGetData;
+
+    // Listen for filter changes.
+    _.each(['primary', 'base'], function(filterCategory){
+      var groupIds = layer.model.get(filterCategory + "_filter_groups");
+      _.each(groupIds, function(groupId){
+        var filterGroup = opts.filterGroups[groupId];
+        filterGroup.on('change:filters', function(){
+          var filters = _.clone(layer.model.get(filterCategory + '_filters')) || {};
+          filters[groupId] = filterGroup.getFilters();
+          layer.model.set(filterCategory + '_filters', filters);
+        }, layer.model);
+
+        layer.model.on('remove', function(){
+          filterGroup.off(null, null, layer.model);
+        });
+      });
+    });
+
+    // Set updateQuery method.
+    var updateQueryFn = layer.model.get('updateQuery');
+    if (updateQueryFn){
+      if (typeof updateQueryFn == 'string'){
+        updateQueryFn = eval(updateQueryFn);
+      }
+    }
+    else{
+      updateQueryFn = vectorDataLayerUpdateQuery;
+    }
+    layer.model.updateQuery = updateQueryFn;
+
+    // Set getData method.
+    var getDataFn = layer.model.get('getData');
+    if (getDataFn){
+      if (typeof getDataFn == 'string'){
+        getDataFn = eval(getDataFn);
+      }
+    }
+    else{
+      getDataFn = vectorDataLayerGetData;
+    }
+    layer.model.getData = getDataFn;
   }
 
   var decorateLayer = function(layer, opts){
@@ -109,11 +164,7 @@ function(Backbone, _){
       console.log("connectDataLayer");
       layer.model.on('change:primary_filters change:base_filters', layer.model.updateQuery, layer.model);
       layer.model.on('change:query', layer.model.getData, layer.model);
-
-      // Update filters.
-      _.each(['base', 'primary'], function(filterCategory){
-        FiltersUtil.updateModelFilters(layer.model, filterCategory, opts);
-      });
+      layer.model.updateQuery();
     },
     disconnect: function(layer, opts){
       console.log("disconnectDataLayer");

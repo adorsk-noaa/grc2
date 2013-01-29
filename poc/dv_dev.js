@@ -48,22 +48,21 @@ function($, DataViewCss, DataView, FeatureModel){
     return features;
   };
 
-  getData = function(layerView, opts){
+  getData = function(){
     console.log('getData');
-    _.each(layerView.model.get('features').models, function(featureModel){
-      featureModel.get('properties').set({p1: featureModel.id * 5});
-    });
+    _.each(this.get('features').models, function(featureModel){
+      featureModel.get('properties').set({p1: featureModel.id * this.get('query')});
+    }, this);
   };
 
   testGetGrid = function(layerView, opts){
     var deferred = $.Deferred();
     var features = getFeatures();
     layerView.model.get('features').add(features.models);
-    getData(layerView, opts);
     setTimeout(function(){
       console.log('tggResolve');
       deferred.resolve();
-    }, 2000);
+    }, 50);
     return deferred;
   };
 
@@ -85,16 +84,23 @@ function($, DataViewCss, DataView, FeatureModel){
       value_type: 'numeric'
     }),
 
-    filterGroups: new Backbone.Collection(
-      [new Backbone.Model({id: 'scenario'}), new Backbone.Model({id: 'data'})]
-    ),
+    filterGroups: ['scenario', 'data'],
 
     summaryBar: new Backbone.Model({
     }),
 
     facetsEditor: new Backbone.Model({
       facetDefinitions: new Backbone.Collection(),
-      facets: new Backbone.Collection()
+      facets: new Backbone.Collection(
+        [
+          new Backbone.Model({
+        id: 'timestep',
+        type: 'timeSlider',
+        choices: [{id: 0, label: 0, value: 0}, {id: 1, label: 1, value: 1}],
+        primary_filter_groups: ['data'],
+        base_filter_groups: ['scenario']
+      })
+      ])
     }),
 
     mapEditor: new Backbone.Model({
@@ -134,6 +140,9 @@ function($, DataViewCss, DataView, FeatureModel){
         disabled: false,
         id: 'testVector',
         initializer: 'testGetGrid',
+        base_filter_groups: ['scenario'],
+        primary_filter_groups: ['data'],
+        getData: 'getData',
       })])
     }),
   });

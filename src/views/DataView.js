@@ -54,7 +54,12 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     initializeFilterGroups: function(){
       var _this = this;
-      this.filterGroups = this.model.get('filterGroups') || new Backbone.Collection();
+      this.filterGroups = {};
+      _.each(this.model.get('filterGroups'), function(groupId){
+        var filterGroup = new Backbone.Collection();
+        FiltersUtil.decorateFilterGroup(filterGroup);
+        this.filterGroups[groupId] = filterGroup;
+      }, this);
     },
 
     initializeWidgets: function(){
