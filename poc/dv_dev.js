@@ -2,9 +2,70 @@ require(
   [
     "jquery",
     "rless!GeoRefineClient/styles/DataView.less",
-    "GeoRefineClient/views/DataView"
+    "GeoRefineClient/views/DataView",
+    "MapView/models/Feature",
 ],
-function($, DataViewCss, DataView){
+function($, DataViewCss, DataView, FeatureModel){
+
+  var getFeatures = function(){
+    var createGrid = function(xMin, xMax, yMin, yMax, dx, dy){
+      var geoms = {};
+      var featureCounter = 0;
+      for (var x=xMin; x < xMax; x += dx){
+        for (var y=yMin; y < yMax; y += dy){
+          featureCounter += 1;
+          var coords = [[x, y],[x,y+dy],[x+dx,y+dy],[x+dx,y],[x,y]];
+          var hex = (featureCounter % 255).toString(16);
+          var color = '#' + hex + hex + hex;
+          geoms[featureCounter] = {
+            "type": "Polygon",
+            "coordinates": [coords]
+          };
+        }
+      }
+      return geoms;
+    };
+
+    var xMin = -40;
+    var xMax = 40;
+    var dx = 10;
+    var yMin = -40;
+    var yMax = 40;
+    var dy = 10;
+    var geoms = createGrid(xMin, xMax, yMin, yMax, dx, dy);
+
+    var features = new Backbone.Collection();
+    for (var i in geoms){
+      var feature = new FeatureModel({
+        id: parseInt(i),
+        geometry: geoms[i],
+        properties: new Backbone.Model({
+          p1: parseInt(i)
+        })
+      });
+      features.add(feature);
+    }
+    return features;
+  };
+
+  getData = function(layerView, opts){
+    console.log('getData');
+    _.each(layerView.model.get('features').models, function(featureModel){
+      featureModel.get('properties').set({p1: featureModel.id * 5});
+    });
+  };
+
+  testGetGrid = function(layerView, opts){
+    var deferred = $.Deferred();
+    var features = getFeatures();
+    layerView.model.get('features').add(features.models);
+    getData(layerView, opts);
+    setTimeout(function(){
+      console.log('tggResolve');
+      deferred.resolve();
+    }, 2000);
+    return deferred;
+  };
 
   var dvModel = new Backbone.Model({
     qField: new Backbone.Model({
@@ -52,7 +113,8 @@ function($, DataViewCss, DataView){
         resolutions:[0.025,0.0125,0.00625,0.003125,0.0015625,0.00078125],
       }),
       base_layers: new Backbone.Collection(
-        [new Backbone.Model({
+        [
+          new Backbone.Model({
         layer_type:"WMS",
         label:"Layer 0",
         disabled:false,
@@ -60,17 +122,20 @@ function($, DataViewCss, DataView){
         params: {"layers": 'basic'},
         id:"layer0",
       })]) ,
+      data_layers: new Backbone.Collection(
+        [
+          new Backbone.Model({
+        colormapId: 'ColorBrewer:PiG',
+        dataProp: 'p1',
+        layer_type: 'Vector',
+        layer_category: 'data',
+        source: 'georefine_data',
+        label: 'Test Vector',
+        disabled: false,
+        id: 'testVector',
+        initializer: 'testGetGrid',
+      })])
     }),
-
-    initialActions: {
-      async: false,
-      actions: [
-        {
-        handler: "mapEditor_initializeMapEditor",
-        type: "action"
-      }
-      ]
-    }
   });
 
   $(document).ready(function(){

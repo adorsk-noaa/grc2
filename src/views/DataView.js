@@ -30,7 +30,8 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       this.setupActionHandlers();
 
       var initialActionsDeferred = null;
-      var initialActions = this.model.get('initialActions') || {};
+      //var initialActions = this.model.get('initialActions') || {};
+      var initialActions = null;
       if (initialActions){
         initialActionsDeferred = ActionsUtil.executeActions(this, initialActions);
       }
@@ -40,16 +41,8 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       }
       initialActionsDeferred.done(function(){
         console.log("done with initialActions");
-
-        // Do default actions.
-        var defaultActionsDeferred = _this.executeDefaultActions();
-        defaultActionsDeferred.done(function(){
-          console.log("done with defaultActions");
-          _this.initialized = true;
-          _this.postInitialize();
-          _this.on('ready', _this.onReady, _this);
-          _this.trigger("ready");
-        });
+        _this.initialized = true;
+        _this.postInitialize();
       });
     },
 
@@ -100,25 +93,29 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     postInitialize: function(){
       var _this = this;
-      // Listen for window resize events.
-      this.on('resize', this.resize, this);
-      this.on('resizeStop', this.resizeStop, this);
+      
+      // Run post initialize actions.
+      var postInitializeActions = {
+        async: false,
+        actions: [
+          {
+          handler: "mapEditor_initializeMapEditor",
+          type: "action"
+        }
+        ]
+      };
 
-      // Call post initialize hooks.
-      /*
-      _.each(UtilModules, function(module){
-        _.each(module.postInitializeHooks, function(hook){
-          hook(_this, {});
-        });
-      });
-      */
+      console.log("calling postInitializeACtions");
+      var actionsDeferred = ActionsUtil.executeActions(this, postInitializeActions);
+      actionsDeferred.done(function(){
+        console.log("done with postInitializeActions");
+        // Listen for window resize events.
+        _this.on('resize', _this.resize, _this);
+        _this.on('resizeStop', _this.resizeStop, _this);
 
-      // Setup infotips.
-      /*
-      GeoRefineViewsUtil.infotipsUtil.setUpInfotips({
-        el: this.el
+        _this.on('ready', _this.onReady, _this);
+        _this.trigger("ready");
       });
-      */
     },
 
     // Not sure on this yet...here or in postInitialize? postInitializeActions?

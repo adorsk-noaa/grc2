@@ -28,9 +28,11 @@ var config= {
     flot: ASSETS_PATH + "/js/flot/jquery.flot",
     DataTables: ASSETS_PATH + "/js/DataTables/media/js/jquery.dataTables.min",
     jqForm: ASSETS_PATH + "/js/jquery.form",
+    tinycolor: ASSETS_PATH + "/js/tinycolor",
   },
 
   shim: {
+    tinycolor: {},
     underscore: {
       exports: "_"
     },

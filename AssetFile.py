@@ -94,5 +94,9 @@ assets = {
     'jquery.window': {
         'type': 'git',
         'source': 'https://github.com/adorsk/jquery.window.git'
+    },
+    'tinycolor.js': {
+        'type': 'url', 
+        'source': 'https://raw.github.com/bgrins/TinyColor/master/dist/tinycolor-min.js'
     }
 }
