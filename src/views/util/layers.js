@@ -21,14 +21,12 @@ function(Backbone, _, FiltersUtil){
 
   var vectorDataLayerUpdateQuery = function(){
     console.log('vdluq', this);
-    console.log(this.get('primary_filters'));
-    var val = 3;
-    try {
-      val = this.get('primary_filters').data[0].filters[0][2];
-    }
-    catch (err){
-    }
-    this.set('query', val + 1);
+    var setObj = {};
+    _.each(['base', 'primary'], function(filterCategory){
+      var attr = filterCategory + '_filters';
+      setObj[attr] = this.get(attr);
+    }, this);
+    this.get('query').set(setObj);
   };
 
 
@@ -59,6 +57,13 @@ function(Backbone, _, FiltersUtil){
   layerDecorators['VectorData'] = function(layer, opts){
     console.log("decorate VectorData Layer");
     layerDecorators['default'](layer, opts);
+
+    // Initialize query.
+    var query = new Backbone.Model();
+    layer.model.set('query', query);
+    query.on('change', function(){
+      layer.model.trigger('change:query change');
+    });
 
     // Listen for filter changes.
     _.each(['primary', 'base'], function(filterCategory){

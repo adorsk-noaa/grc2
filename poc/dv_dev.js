@@ -51,7 +51,7 @@ function($, DataViewCss, DataView, FeatureModel){
   getData = function(){
     console.log('getData');
     _.each(this.get('features').models, function(featureModel){
-      featureModel.get('properties').set({p1: featureModel.id * this.get('query')});
+      featureModel.get('properties').set({p1: featureModel.get('properties').get('p1') + 1});
     }, this);
   };
 
@@ -143,6 +143,8 @@ function($, DataViewCss, DataView, FeatureModel){
         base_filter_groups: ['scenario'],
         primary_filter_groups: ['data'],
         getData: 'getData',
+        query: new Backbone.Model({
+        }),
       })])
     }),
   });

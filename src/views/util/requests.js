@@ -114,9 +114,6 @@ function(_, _s, Util, FiltersUtil){
     // 'select sum(dataset.xy) group by dataset.category from
     // (select data.x * data.y where data.x > 7 group by data.category) as dataset
 
-    // Shortcuts.
-    var qfield  = model.get('quantity_field');
-
     // Get the inner query.
     var inner_q = makeKeyedInnerQuery(model, key, filter_attrs);
 
