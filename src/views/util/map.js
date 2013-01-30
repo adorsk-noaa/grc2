@@ -45,13 +45,27 @@ function($, Backbone, _, FormatUtil, MapEditorView, LayersUtil){
 
 
   var initializeMapEditor = function(mapEditor, opts){
-    var deferreds = [];
+    var deferred = $.Deferred();
+
+    // Initialize layers.
+    var initializerDeferreds = [];
     _.each(mapEditor.mapView.layerRegistry, function(layer){
       LayersUtil.decorateLayer(layer, opts);
-      deferreds.push(LayersUtil.initializeLayer(layer, opts));
-      LayersUtil.connectLayer(layer, opts);
+      if (layer.initializeLayer){
+        initializerDeferreds.push(layer.initializeLayer(opts));
+      }
     });
-    return $.when.apply($, deferreds);
+    var initializerDeferred = $.when.apply($, initializerDeferreds);
+
+    // Connect layers when initialization is done.
+    initializerDeferred.done(function(){
+      console.log("init is done");
+      _.each(mapEditor.mapView.layerRegistry, function(layer){
+        LayersUtil.connectLayer(layer, opts);
+      });
+      deferred.resolve();
+    });
+    return deferred;
   };
 
   var actionHandlers = {};

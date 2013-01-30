@@ -7,6 +7,10 @@ require(
 ],
 function($, DataViewCss, DataView, FeatureModel){
 
+  GeoRefine = {};
+  GeoRefine.app = {};
+  GeoRefine.app.requestsEndpoint = 'http://localhost:8000/georefine/projects/execute_requests/98/';
+
   var getFeatures = function(){
     var createGrid = function(xMin, xMax, yMin, yMax, dx, dy){
       var geoms = {};
@@ -48,12 +52,31 @@ function($, DataViewCss, DataView, FeatureModel){
     return features;
   };
 
-  getData = function(){
-    console.log('getData');
+  executeQuery = function(){
+    console.log("eq");
+    var deferred = $.Deferred();
+
+    var mockData = [];
     _.each(this.get('features').models, function(featureModel){
-      featureModel.get('properties').set({p1: featureModel.get('properties').get('p1') + 1});
-    }, this);
-  };
+      var mockDatum = {
+        data: {
+          properties: {
+            p1: featureModel.get('properties').get('p1') + 1
+          }
+        },
+        key: featureModel.id
+      };
+      mockData.push(mockDatum);
+    });
+
+    var mockKeyedResults = {
+      results: {
+        keyed_results: mockData
+      }
+    };
+    deferred.resolve(mockKeyedResults);
+    return deferred;
+  }
 
   testGetGrid = function(layerView, opts){
     var deferred = $.Deferred();
@@ -142,8 +165,64 @@ function($, DataViewCss, DataView, FeatureModel){
         initializer: 'testGetGrid',
         base_filter_groups: ['scenario'],
         primary_filter_groups: ['data'],
-        getData: 'getData',
+        //executeDataQuery: 'executeDataQuery',
+        //executeFeaturesQuery: 'executeGeometryQuery',
+        featuresQuery: new Backbone.Model({
+          ID: 'features',
+          SELECT: [
+            {'ID': 'fid', EXPRESSION: '__cell__id'},
+            {'ID': 'geometry', EXPRESSION: 'func.AsGeoJSON(__cell__geom)'},
+          ]
+        }),
         query: new Backbone.Model({
+          quantity_field: new Backbone.Model({
+            inner_query: {
+              SELECT: [
+                {ID: 'x_sum', EXPRESSION: 'func.sum(__result__x)'},
+                {ID: 'cell_id', EXPRESSION: '__result__cell_id'}
+              ],
+              GROUP_BY: [
+                {ID: 'cell_id'}
+              ]
+            },
+            outer_query: {
+              SELECT: [
+                {ID: 'x_dens', EXPRESSION: '__inner__x_sum/__cell__area'},
+                {ID: 'cell_id', EXPRESSION: '__cell__id'},
+              ],
+              FROM: [
+                {
+                SOURCE: 'cell',
+                JOINS: [
+                  [
+                    'inner',
+                    [
+                      {TYPE: 'ENTITY', EXPRESSION: '__inner__cell_id'},
+                      '==',
+                      {TYPE: 'ENTITY', EXPRESSION: '__cell__id'},
+                    ]
+                ]
+                ]
+              }
+              ]
+            },
+          }),
+          KEY: {
+            KEY_ENTITY: {
+              EXPRESSION: '__result__cell_id',
+              ID: 'cell_id',
+              ALL_VALUES: true
+            },
+            QUERY: {
+              ID: 'kq',
+              SELECT: [
+                {ID: 'cell_id', EXPRESSION: '__cell__id'},
+              ]
+            }
+          },
+          propertyMappings: {
+            p1: 'x_dens'
+          }
         }),
       })])
     }),

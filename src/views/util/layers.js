@@ -2,33 +2,140 @@ define([
        'backbone',
        'underscore',
        './filters',
+       './requests',
+       "MapView/models/Feature",
 ],
-function(Backbone, _, FiltersUtil){
+function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
 
   /*
    * Define custom functions.
    */
   var vectorDataLayerGetData = function(){
     console.log('vdlgd', this);
-    var features = this.get('features');
 
-    _.each(features.models, function(featureModel){
-      var props = featureModel.get('properties');
-      props.set({p1: props.get('p1') * this.get('query')});
-    }, this);
+    var features = this.model.get('features');
 
+    var deferred = this.executeDataQuery();
+    deferred.done(_.bind(function(data){
+      _.each(data.results.keyed_results, function(datum){
+        var featureModel = features.get(datum.key);
+        if (! featureModel){
+          return;
+        }
+        var newProperties = {};
+        _.each(this.model.get('query').get('propertyMappings'), function(col, prop){
+          if (datum.data.properties && typeof datum.data.properties[col] != 'undefined'){
+            newProperties[prop] = datum.data.properties[col];
+          }
+        }, this);
+        featureModel.get('properties').set(newProperties);
+      }, this);
+    }, this));
+
+    deferred.fail(function(){
+      console.log('fail');
+    });
   };
 
-  var vectorDataLayerUpdateQuery = function(){
+  var vectorDataLayerUpdateDataQuery = function(){
     console.log('vdluq', this);
     var setObj = {};
     _.each(['base', 'primary'], function(filterCategory){
       var attr = filterCategory + '_filters';
-      setObj[attr] = this.get(attr);
+      setObj[attr] = this.model.get(attr);
     }, this);
-    this.get('query').set(setObj);
+    this.model.get('query').set(setObj);
   };
 
+  var vectorDataLayerExecuteDataQuery = function(){
+    console.log('vdeq', this);
+    var query = this.model.get('query');
+    var qfield  = query.get('quantity_field');
+    if (! qfield){
+      return;
+    }
+
+    // Copy the key entity.
+    var key = JSON.parse(JSON.stringify(query.get('KEY')));
+
+    // Assemble the queries.
+    var inner_q = RequestsUtil.makeKeyedInnerQuery(query, key, ['base_filters', 'primary_filters']);
+    var outer_q = RequestsUtil.makeKeyedOuterQuery(query, key, inner_q, 'properties');
+
+    // Assemble the keyed result parameters.
+    var keyed_results_parameters = {
+      "KEY": key,
+      "QUERIES": [outer_q]
+    };
+
+    // Assemble keyed query request.
+    var keyed_query_request = {
+      'ID': 'keyed_results',
+      'REQUEST': 'execute_keyed_queries',
+      'PARAMETERS': keyed_results_parameters
+    };
+    var requests = [keyed_query_request];
+
+    // Start the request and save the deferred object.
+    var deferred = $.ajax({
+      url: GeoRefine.app.requestsEndpoint,
+      type: 'POST',
+      data: {'requests': JSON.stringify(requests)},
+    });
+    return deferred;
+  };
+
+  var vectorDataLayerGetFeatures = function(){
+    var features = this.model.get('features');
+
+    var deferred = $.Deferred();
+
+    var queryDeferred = this.executeFeaturesQuery();
+    queryDeferred.done(_.bind(function(data){
+      _.each(data.results.featuresResults.features, function(datum){
+        var featureModel = new FeatureModel({
+          id: datum.fid,
+          geometry: JSON.parse(datum.geometry)
+        });
+        features.add(featureModel);
+      });
+      deferred.resolve();
+    }, this));
+
+    queryDeferred.fail(function(){
+      console.log('fail');
+      deferred.reject();
+    });
+
+    return deferred;
+  };
+
+  var vectorDataLayerExecuteFeaturesQuery = function(){
+    console.log('vdefq', this);
+    var featuresQuery = this.model.get('featuresQuery');
+
+    // Assemble query request.
+    var query_request = {
+      'ID': 'featuresResults',
+      'REQUEST': 'execute_queries',
+      'PARAMETERS': {QUERIES: [featuresQuery.toJSON()]}
+    };
+    var requests = [query_request];
+
+    // Start the request and save the deferred object.
+    var deferred = $.ajax({
+      url: GeoRefine.app.requestsEndpoint,
+      type: 'POST',
+      data: {'requests': JSON.stringify(requests)},
+    });
+    return deferred;
+  };
+
+  var vectorDataLayerInitializeLayer = function(){
+    console.log("vdlil");
+    var featuresDeferred = this.getFeatures();
+    return featuresDeferred;
+  }
 
   /*
    * Define layer decorators.
@@ -59,9 +166,10 @@ function(Backbone, _, FiltersUtil){
     layerDecorators['default'](layer, opts);
 
     // Initialize query.
-    var query = new Backbone.Model();
-    layer.model.set('query', query);
-    query.on('change', function(){
+    if (! layer.model.get('query')){
+      layer.model.set('query', new Backbone.Model());
+    }
+    layer.model.get('query').on('change', function(){
       layer.model.trigger('change:query change');
     });
 
@@ -80,31 +188,32 @@ function(Backbone, _, FiltersUtil){
           filterGroup.off(null, null, layer.model);
         });
       });
+      // Get current filters.
+      FiltersUtil.updateModelFilters(layer.model, filterCategory, opts);
     });
 
-    // Set updateQuery method.
-    var updateQueryFn = layer.model.get('updateQuery');
-    if (updateQueryFn){
-      if (typeof updateQueryFn == 'string'){
-        updateQueryFn = eval(updateQueryFn);
-      }
-    }
-    else{
-      updateQueryFn = vectorDataLayerUpdateQuery;
-    }
-    layer.model.updateQuery = updateQueryFn;
+    // Default methods.
+    var defaultMethods = {
+      initializeLayer:  vectorDataLayerInitializeLayer,
+      updateDataQuery: vectorDataLayerUpdateDataQuery,
+      getData: vectorDataLayerGetData,
+      executeDataQuery: vectorDataLayerExecuteDataQuery,
+      getFeatures: vectorDataLayerGetFeatures,
+      executeFeaturesQuery: vectorDataLayerExecuteFeaturesQuery,
+    };
 
-    // Set getData method.
-    var getDataFn = layer.model.get('getData');
-    if (getDataFn){
-      if (typeof getDataFn == 'string'){
-        getDataFn = eval(getDataFn);
+    _.each(defaultMethods, function(defaultMethod, methodId){
+      var method = layer.model.get(methodId);
+      if (method){
+        if (typeof method == 'string'){
+          method = eval(method);
+        }
       }
-    }
-    else{
-      getDataFn = vectorDataLayerGetData;
-    }
-    layer.model.getData = getDataFn;
+      else{
+        method = defaultMethod;
+      }
+      layer[methodId] = method;
+    });
   }
 
   var decorateLayer = function(layer, opts){
@@ -119,7 +228,6 @@ function(Backbone, _, FiltersUtil){
       var src = layer.model.get('source');
       var type = layer.model.get('layer_type');
       if (src == 'georefine_data' && type == 'Vector'){
-        console.log('here');
         decorator = layerDecorators['VectorData'];
       }
       else{
@@ -132,24 +240,6 @@ function(Backbone, _, FiltersUtil){
     }
   };
 
-  /*
-   * Define layer initializers.
-   */
-  var layerInitializers = {};
-  var initializeLayer = function(layer, opts){
-    console.log("initializeLayer", arguments);
-    var initializer = layer.model.get('initializer');
-    if (initializer){
-      if (typeof initializer == 'string'){
-        initializer = eval(initializer);
-      }
-    }
-    else{
-    }
-    if (initializer){
-      return initializer(layer, opts);
-    }
-  };
 
   /*
    * Define layer connectors.
@@ -167,14 +257,14 @@ function(Backbone, _, FiltersUtil){
   layerConnectors['georefine_data'] = {
     connect: function(layer, opts){
       console.log("connectDataLayer");
-      layer.model.on('change:primary_filters change:base_filters', layer.model.updateQuery, layer.model);
-      layer.model.on('change:query', layer.model.getData, layer.model);
-      layer.model.updateQuery();
+      layer.model.on('change:primary_filters change:base_filters', layer.updateQuery, layer);
+      layer.model.on('change:query', layer.getData, layer);
+      layer.updateDataQuery();
     },
     disconnect: function(layer, opts){
       console.log("disconnectDataLayer");
-      layer.model.off(null, layer.model.updateQuery);
-      layer.model.off(null, layer.model.getData);
+      layer.model.off(null, layer.updateDataQuery);
+      layer.model.off(null, layer.getData);
     }
   };
 
@@ -206,7 +296,6 @@ function(Backbone, _, FiltersUtil){
   };
 
   var exports = {
-    initializeLayer: initializeLayer,
     decorateLayer: decorateLayer,
     connectLayer: connectLayer
   };

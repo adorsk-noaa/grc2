@@ -51,9 +51,11 @@ function(_, _s, Util, FiltersUtil){
       var filters = model.get(filter_attr);
       var filter_array = FiltersUtil.filterObjectGroupsToArray(filters);
       _.each(filter_array, function(f){
-        q['WHERE'].push(f);
+        // TESTING
+        //q['WHERE'].push(f);
       });
     }, this)
+    q['WHERE'].push([{TYPE: 'ENTITY', EXPRESSION: '__result__t'}, '==', 3]);
   };
 
   var makeKeyedInnerQuery = function(model, key, filter_attrs){
