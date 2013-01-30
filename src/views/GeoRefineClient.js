@@ -1,12 +1,24 @@
 define([
+       'jquery',
        'backbone',
        'underscore',
+       '_s',
        'text!./templates/GeoRefineClient.html',
        './util/actions',
        './util/floatingDataViews'
 
 ],
-function(Backbone, _, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUtil){
+function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUtil){
+
+  // Setup GeoRefine singleton.
+  if (! GeoRefine){
+    GeoRefine = {};
+  }
+
+  // Run initialize function if provided.
+  if (GeoRefine.initialize){
+    GeoRefine.initialize($, Backbone, _, _s);
+  }
 
   var GeoRefineClientView = Backbone.View.extend({
     events: {
@@ -14,6 +26,8 @@ function(Backbone, _, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUti
     },
 
     initialize: function(opts){
+
+
       var _this = this;
       opts = opts || {};
       this.config = opts.config || {};
@@ -122,7 +136,8 @@ function(Backbone, _, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUti
       var html = _.template(GeoRefineClientTemplate, {model: this.model});
       $(this.el).html(html);
       this.$qFieldSelector = $('#qFieldSelector');
-      _.each(this.config.dataViewConfigurations, function(dvConfig, key){
+      //_.each(this.config.dataViewConfigurations, function(dvConfig, key){
+      _.each(GeoRefine.config.dataViewConfigurations, function(dvConfig, key){
         $('<option value="' + key + '">' + key + '</option>').appendTo(_this.$qFieldSelector);
       });
       FloatingDataViewsUtil.setUpWindows(this);
@@ -139,13 +154,10 @@ function(Backbone, _, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUti
     addDataView: function(){
       // @TODO: get this dynamically.
       var configKey = this.$qFieldSelector.val();
-      var dataViewConfig = this.config.dataViewConfigurations[configKey];
-      FloatingDataViewsUtil.addFloatingDataView(
-        this,
-        {
-          dataView: {config: dataViewConfig}
-        }
-      );
+      var dataViewModel = GeoRefine.config.dataViewConfigurations[configKey].clone();
+      FloatingDataViewsUtil.addFloatingDataView(this, {
+        dataViewModel: dataViewModel
+      });
     }
 
   });

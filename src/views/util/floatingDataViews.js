@@ -100,9 +100,9 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     },
 
     renderDataView: function(){
-      this.dataView = new DataView(_.extend({
-        model: new Backbone.Model()
-      }, this.opts.dataView));
+      this.dataView = new DataView({
+        model: this.model.get('dataView')
+      })
     },
 
     onReady: function(){
@@ -124,14 +124,15 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
   var addFloatingDataView = function(ctx, opts){
 
     var model = new Backbone.Model({
-      id: opts.id || Math.random()
+      id: opts.id || Math.random(),
+      dataView: opts.dataViewModel
     });
 
     // Create floating data view.
-    var floatingDataView = new FloatingDataView(_.extend({
+    var floatingDataView = new FloatingDataView({
       model: model,
       ctx: ctx
-    }, opts));
+    });
 
     // Register the floating data view.
     ctx.dataViews.floatingDataViews[model.id] = floatingDataView;

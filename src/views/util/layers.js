@@ -15,8 +15,11 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
 
     var features = this.model.get('features');
 
-    var deferred = this.executeDataQuery();
+    var deferred = $.when(this.executeDataQuery());
     deferred.done(_.bind(function(data){
+      if (! data || ! data.results || ! data.results.keyed_result){
+        return;
+      }
       _.each(data.results.keyed_results, function(datum){
         var featureModel = features.get(datum.key);
         if (! featureModel){

@@ -6,24 +6,6 @@ require(
 ],
 function($, GeoRefineClientCss, GeoRefineClientView){
 
-  var geoRefineBaseUrl = 'http://localhost:8000/georefine';
-  var projectId = 94;
-  GeoRefine = {};
-  GeoRefine.app = {
-    requestsEndpoint: geoRefineBaseUrl + '/projects/execute_requests/' + projectId + '/',
-    WMSLayerEndpoint: geoRefineBaseUrl + '/projects/' + projectId + 'layer',
-    colorBarEndpoint: geoRefineBaseUrl + '/projects/colorbar/',
-    dataLayerEndpoint: geoRefineBaseUrl + '/projects/get_map/' + projectId + '/',
-    keyedStringsEndpoint: geoRefineBaseUrl + '/ks'
-  };
-
-  GeoRefine.config = {
-    defaultInitialState: {
-      dataViews: {
-      }
-    }
-  };
-
   $(document).ready(function(){
     $(document.body).append('<p id="stylesLoaded" style="display: none;"></p>');
     cssEl = document.createElement('style');
@@ -55,12 +37,7 @@ function($, GeoRefineClientCss, GeoRefineClientView){
       window.grc = new GeoRefineClientView({
         model: new Backbone.Model({}),
         el: $('#main'),
-        config: {
-          dataViewConfigurations: dataViewConfigurations
-        }
       });
-
-      //window.dv.trigger('ready');
     });
   });
 }
