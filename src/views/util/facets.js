@@ -50,7 +50,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
     var facetCollectionView = facetsEditorView.subViews.facets;
     // Initialize and connect initial facets.
     _.each(facetCollectionView.registry, function(facetView, id){
-      initializeFacet(facetView, {filterGroups: opts.filterGroups});
+      initializeFacet(facetView, {filterGroups: opts.filterGroups, qField: opts.qField});
       connectFacet(facetView, {filterGroups: opts.filterGroups, summaryBar: summaryBar});
     });
     // Disconnect facets when removed.
@@ -509,8 +509,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
 
   actionHandlers.facets_initializeFacet = function(ctx, opts){
     var facet = ctx.getFacetView(opts);
-    var filterGroups = ctx.filterGroups;
-    initializeFacet(facet, {filterGroups: filterGroups});
+    initializeFacet(facet, {filterGroups: ctx.filterGroups, qField: ctx.qField});
   };
 
   actionHandlers.facets_connectFacet = function(ctx, opts){

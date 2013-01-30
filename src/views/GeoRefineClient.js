@@ -146,6 +146,12 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
     onReady: function(){
       this.resize();
+      // TESTING
+      for (var k in GeoRefine.config.dataViewConfigurations){
+        this.$qFieldSelector.val(k);
+        break;
+      }
+      this.addDataView();
     },
 
     resize: function(){
