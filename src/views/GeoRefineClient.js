@@ -5,10 +5,10 @@ define([
        '_s',
        'text!./templates/GeoRefineClient.html',
        './util/actions',
-       './util/floatingDataViews'
-
+       './util/floatingDataViews',
+       './util/serialization',
 ],
-function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUtil){
+function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUtil, SerializationUtil){
 
   // Setup GeoRefine singleton.
   if (! GeoRefine){
@@ -155,6 +155,12 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       // @TODO: get this dynamically.
       var configKey = this.$qFieldSelector.val();
       var dataViewModel = GeoRefine.config.dataViewConfigurations[configKey].clone();
+      // Serialize and deserialize the model to clone it.
+      var serializationRegistry = {};
+      var deserializationRegistry = {};
+      serializedModel = SerializationUtil.serialize(dataViewModel, serializationRegistry);
+      dataViewModel = SerializationUtil.deserialize(serializedModel, deserializationRegistry, serializationRegistry);
+      console.log(dataViewModel);
       FloatingDataViewsUtil.addFloatingDataView(this, {
         dataViewModel: dataViewModel
       });
