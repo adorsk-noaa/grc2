@@ -179,11 +179,11 @@ GeoRefine.initialize = function($, Backbone, _, _s){
     _.each(fields, function(field){
       var densityId = field.col + '_density';
       var propertyMappings = {};
-      propertyMappings[field.id] = densityId;
+      propertyMappings[densityId] = densityId;
       dataLayers[field.id] = new Backbone.Model({
         id: field.id,
         colormapId: field.colormapId,
-        dataProp: field.id,
+        dataProp: densityId,
         layer_type: 'Vector',
         layer_category: 'data',
         source: 'georefine_data',
@@ -219,12 +219,12 @@ GeoRefine.initialize = function($, Backbone, _, _s){
           },
         }),
         KEY: cellKeyEntity,
-        propertyMappings: propertyMappings,
+        mappings: propertyMappings,
         }),
       })
     });
 
-    var timestepFacetActionQueue = {
+    var initialTimestepFacetActionQueue = {
       "async": false,
       "type": "actionQueue",
       "once": true,
@@ -275,9 +275,10 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       ]
     };
 
-    var summaryBarActionQueue = {
+    var initialSummaryBarActionQueue = {
       "async": false,
       "type": "actionQueue",
+      "once": true,
       "actions": [
         {
         "handler": "summaryBar_initialize",
@@ -289,20 +290,23 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       },
       {
         "handler": "summaryBar_getData",
-        "type": "action"
+        "type": "action",
       }
       ]
     };
 
-    var mapActionQueue = {
+    var mapAction = {
+      "type": "action",
+      "handler": "mapEditor_initializeMapEditor"
     };
 
     var initialActions = {
       async: false,
       type: "actionQueue",
       actions: [
-        timestepFacetActionQueue,
-        summaryBarActionQueue,
+        initialTimestepFacetActionQueue,
+        initialSummaryBarActionQueue,
+        mapAction,
       ]
     };
 

@@ -99,46 +99,15 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     },
 
     postInitialize: function(){
+      console.log("DataView.postInitialize");
       var _this = this;
 
-      // Run post initialize actions.
-      var postInitializeActions = {
-        async: false,
-        actions: [
-          {
-          handler: "mapEditor_initializeMapEditor",
-          type: "action"
-        }
-        ]
-      };
+      // Listen for window resize events.
+      _this.on('resize', _this.resize, _this);
+      _this.on('resizeStop', _this.resizeStop, _this);
 
-      console.log("calling postInitializeACtions");
-      var actionsDeferred = ActionsUtil.executeActions(this, postInitializeActions);
-      actionsDeferred.done(function(){
-        console.log("done with postInitializeActions");
-        // Listen for window resize events.
-        _this.on('resize', _this.resize, _this);
-        _this.on('resizeStop', _this.resizeStop, _this);
-
-        _this.on('ready', _this.onReady, _this);
-        _this.trigger("ready");
-      });
-    },
-
-    // Not sure on this yet...here or in postInitialize? postInitializeActions?
-    // goals is to make it possiblef or things like vectorLayers to fetch data,
-    // and block execution until they resolve.
-    executeDefaultActions: function(){
-      var defaultActions = {
-        async: false,
-        actions: [
-          {
-          handler: "facetsEditor_initializeFacetsEditor",
-          type: "action"
-        }
-        ]
-      };
-      return ActionsUtil.executeActions(this, defaultActions);
+      _this.on('ready', _this.onReady, _this);
+      _this.trigger("ready");
     },
 
     resize: function(){

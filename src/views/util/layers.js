@@ -10,14 +10,14 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
   /*
    * Define custom functions.
    */
-  var vectorDataLayerGetData = function(){
+  var vectorDataLayerGetProperties = function(){
     console.log('vdlgd', this);
 
     var features = this.model.get('features');
 
-    var deferred = $.when(this.executeDataQuery());
+    var deferred = $.when(this.executePropertiesQuery());
     deferred.done(_.bind(function(data){
-      if (! data || ! data.results || ! data.results.keyed_result){
+      if (! data || ! data.results || ! data.results.keyed_results){
         return;
       }
       _.each(data.results.keyed_results, function(datum){
@@ -26,7 +26,7 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
           return;
         }
         var newProperties = {};
-        _.each(this.model.get('query').get('propertyMappings'), function(col, prop){
+        _.each(this.model.get('propertiesQuery').get('mappings'), function(col, prop){
           if (datum.data.properties && typeof datum.data.properties[col] != 'undefined'){
             newProperties[prop] = datum.data.properties[col];
           }
@@ -38,21 +38,23 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
     deferred.fail(function(){
       console.log('fail');
     });
+
+    return deferred;
   };
 
-  var vectorDataLayerUpdateDataQuery = function(){
+  var vectorDataLayerUpdatePropertiesQuery = function(){
     console.log('vdluq', this);
     var setObj = {};
     _.each(['base', 'primary'], function(filterCategory){
       var attr = filterCategory + '_filters';
       setObj[attr] = this.model.get(attr);
     }, this);
-    this.model.get('query').set(setObj);
+    this.model.get('propertiesQuery').set(setObj);
   };
 
-  var vectorDataLayerExecuteDataQuery = function(){
-    console.log('vdeq', this);
-    var query = this.model.get('query');
+  var vectorDataLayerExecutePropertiesQuery = function(){
+    console.log('vedq', this);
+    var query = this.model.get('propertiesQuery');
     var qfield  = query.get('quantity_field');
     if (! qfield){
       return;
@@ -169,11 +171,11 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
     layerDecorators['default'](layer, opts);
 
     // Initialize query.
-    if (! layer.model.get('query')){
-      layer.model.set('query', new Backbone.Model());
+    if (! layer.model.get('propertiesQuery')){
+      layer.model.set('propertiesQuery', new Backbone.Model());
     }
-    layer.model.get('query').on('change', function(){
-      layer.model.trigger('change:query change');
+    layer.model.get('propertiesQuery').on('change', function(){
+      layer.model.trigger('change:propertiesQuery change');
     });
 
     // Listen for filter changes.
@@ -198,9 +200,9 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
     // Default methods.
     var defaultMethods = {
       initializeLayer:  vectorDataLayerInitializeLayer,
-      updateDataQuery: vectorDataLayerUpdateDataQuery,
-      getData: vectorDataLayerGetData,
-      executeDataQuery: vectorDataLayerExecuteDataQuery,
+      updatePropertiesQuery: vectorDataLayerUpdatePropertiesQuery,
+      getProperties: vectorDataLayerGetProperties,
+      executePropertiesQuery: vectorDataLayerExecutePropertiesQuery,
       getFeatures: vectorDataLayerGetFeatures,
       executeFeaturesQuery: vectorDataLayerExecuteFeaturesQuery,
     };
@@ -260,14 +262,14 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
   layerConnectors['georefine_data'] = {
     connect: function(layer, opts){
       console.log("connectDataLayer");
-      layer.model.on('change:primary_filters change:base_filters', layer.updateQuery, layer);
-      layer.model.on('change:query', layer.getData, layer);
-      layer.updateDataQuery();
+      layer.model.on('change:primary_filters change:base_filters', layer.updatePropertiesQuery, layer);
+      layer.model.on('change:propertiesQuery', layer.getProperties, layer);
+      layer.updatePropertiesQuery();
     },
     disconnect: function(layer, opts){
       console.log("disconnectDataLayer");
-      layer.model.off(null, layer.updateDataQuery);
-      layer.model.off(null, layer.getData);
+      layer.model.off(null, layer.updatePropertiesQuery);
+      layer.model.off(null, layer.getProperties);
     }
   };
 
