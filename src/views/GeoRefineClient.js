@@ -170,6 +170,8 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       FloatingDataViewsUtil.addFloatingDataView(this, {
         dataViewModel: dataViewModel
       });
+      // TESTING
+      window.dvm = dataViewModel;
     }
 
   });

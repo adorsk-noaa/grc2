@@ -227,6 +227,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
     var timestepFacetActionQueue = {
       "async": false,
       "type": "actionQueue",
+      "once": true,
       "actions": [
         {
         "handler": "facets_facet_add",

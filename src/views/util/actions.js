@@ -49,6 +49,11 @@ function($){
                     actionFuncs.push(actionFunc);
                 });
 
+                // Remove actions that should only be executed once.
+                _actionQueue.actions = _.filter(_actionQueue.actions, function(action){
+                  return ! action.once;
+                });
+
                 // Deferred representing deferred form final child action.
                 var finalDeferred = null;
 

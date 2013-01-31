@@ -101,13 +101,6 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     postInitialize: function(){
       var _this = this;
 
-      // Call postinitialize hooks.
-      _.each(hookModules, function(module){
-        _.each(module.postInitializeHooks, function(hook){
-          hook(_this, {filterGroups: this.filterGroups});
-        });
-      });
-
       // Run post initialize actions.
       var postInitializeActions = {
         async: false,
