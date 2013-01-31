@@ -274,11 +274,34 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       ]
     };
 
+    var summaryBarActionQueue = {
+      "async": false,
+      "type": "actionQueue",
+      "actions": [
+        {
+        "handler": "summaryBar_initialize",
+        "type": "action"
+      },
+      {
+        "handler": "summaryBar_connect",
+        "type": "action"
+      },
+      {
+        "handler": "summaryBar_getData",
+        "type": "action"
+      }
+      ]
+    };
+
+    var mapActionQueue = {
+    };
+
     var initialActions = {
       async: false,
       type: "actionQueue",
       actions: [
-        timestepFacetActionQueue
+        timestepFacetActionQueue,
+        summaryBarActionQueue,
       ]
     };
 
@@ -287,7 +310,10 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       dvConfigs[field.id] = new Backbone.Model({
         qField: qFields[field.id],
         filterGroups: ['scenario', 'data'],
-        summaryBar: new Backbone.Model(),
+        summaryBar: new Backbone.Model({
+          base_filter_groups: ['scenario'],
+          primary_filter_groups: ['data'],
+        }),
         facetsEditor: new Backbone.Model({
           facetDefinitions: facetDefinitions,
           facets: new Backbone.Collection([])

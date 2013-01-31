@@ -513,7 +513,7 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
     initializeFacet(facet, ctx);
   };
 
-  actionHandlers.facets_facet_connect= function(ctx, opts){
+  actionHandlers.facets_facet_connect = function(ctx, opts){
     var facet = ctx.getFacetView(opts);
     connectFacet(facet, ctx);
   };

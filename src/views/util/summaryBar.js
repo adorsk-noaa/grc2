@@ -164,16 +164,12 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
 
   // Initialize summary bar.  Sets filters, qField.
   actionHandlers.summaryBar_initialize = function(ctx, opts){
-    var summaryBar = ctx.summaryBar;
-    initializeSummaryBar({summaryBar: summaryBar, qField: ctx.qField, filterGroups: ctx.filterGroups});
+    initializeSummaryBar(ctx);
   };
 
   // Connect summaryBar.
   actionHandlers.summaryBar_connect = function(ctx, opts){
-    connectSummaryBar({
-      summaryBar: ctx.summaryBar,
-      filterGroups: ctx.filterGroups
-    })
+    connectSummaryBar(ctx);
   };
 
   // getData action handler.
@@ -199,9 +195,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
     initializeSummaryBar: initializeSummaryBar,
     actionHandlers: actionHandlers,
     deserializeConfigState: deserializeConfigState,
-    postInitializeHooks: [
-      summaryBar_postInitialize
-    ]
+    //postInitializeHooks: [summaryBar_postInitialize],
   };
   return exports;
 });
