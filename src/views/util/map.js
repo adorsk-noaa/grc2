@@ -73,6 +73,10 @@ function($, Backbone, _, FormatUtil, MapEditorView, LayersUtil){
     return initializeMapEditor(ctx.mapEditor, {filterGroups: ctx.filterGroups});
   };
 
+  actionHandlers.mapEditor_setExtent = function(ctx, opts){
+    ctx.mapEditor.mapView.model.set('extent', opts.extent);
+  };
+
   var exports = {
     createMapEditor: createMapEditor,
     actionHandlers: actionHandlers,

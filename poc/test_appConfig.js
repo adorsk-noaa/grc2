@@ -188,6 +188,9 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         layer_category: 'data',
         source: 'georefine_data',
         label: field.label + ', per unit cell area',
+        vmin: 0,
+        vmax: 1,
+        disabled: false,
         base_filter_groups: ['scenario'],
         primary_filter_groups: ['data'],
         featuresQuery: cellsFeatureQuery,
@@ -295,9 +298,22 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       ]
     };
 
-    var mapAction = {
-      "type": "action",
-      "handler": "mapEditor_initializeMapEditor"
+    var mapActionQueue = {
+      "async": false,
+      "type": "actionQueue",
+      "actions": [
+        {
+        "type": "action",
+        "handler": "mapEditor_initializeMapEditor"
+      },
+      {
+        "type": "action",
+        "handler": "mapEditor_setExtent",
+        "opts": {
+          "extent": [-3,-3,3,3]
+        }
+      }
+      ]
     };
 
     var initialActions = {
@@ -306,7 +322,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       actions: [
         initialTimestepFacetActionQueue,
         initialSummaryBarActionQueue,
-        mapAction,
+        mapActionQueue,
       ]
     };
 
