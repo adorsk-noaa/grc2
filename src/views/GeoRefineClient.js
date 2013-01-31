@@ -22,7 +22,8 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
   var GeoRefineClientView = Backbone.View.extend({
     events: {
-      'click .addView': 'addDataView'
+      'click .addView': 'addDataView',
+      'click .cloneTest': 'cloneTest'
     },
 
     initialize: function(opts){
@@ -166,13 +167,24 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       var deserializationRegistry = {};
       serializedModel = SerializationUtil.serialize(dataViewModel, serializationRegistry);
       dataViewModel = SerializationUtil.deserialize(serializedModel, deserializationRegistry, serializationRegistry);
-      console.log(dataViewModel);
       FloatingDataViewsUtil.addFloatingDataView(this, {
         dataViewModel: dataViewModel
       });
       // TESTING
-      window.dvm = dataViewModel;
-    }
+      if (! window.dvm){
+        window.dvm = dataViewModel;
+      }
+    },
+
+    cloneTest: function(){
+      var serializationRegistry = {};
+      var deserializationRegistry = {};
+      serializedModel = SerializationUtil.serialize(window.dvm, serializationRegistry);
+      dataViewModel = SerializationUtil.deserialize(serializedModel, deserializationRegistry, serializationRegistry);
+      FloatingDataViewsUtil.addFloatingDataView(this, {
+        dataViewModel: dataViewModel
+      });
+    },
 
   });
 

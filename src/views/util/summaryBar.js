@@ -104,11 +104,10 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
 
   var connectSummaryBar = function(opts){
     var summaryBar = opts.summaryBar;
-    var filterGroups = opts.filterGroups;
-
     if (summaryBar.connected){
       return;
     }
+    var filterGroups = opts.filterGroups;
 
     // Listen for filter changes.
     _.each(['primary', 'base'], function(filterCategory){
@@ -139,25 +138,28 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
   };
 
   var initializeSummaryBar = function(opts){
+    console.log('initializeSummaryBar');
     var summaryBar = opts.summaryBar;
+
+    if (summaryBar.initialized){
+      return;
+    }
+
     var qField = opts.qField;
     var filterGroups = opts.filterGroups;
 
-    decorateSummaryBar({summaryBar: summaryBar});
+    decorateSummaryBar(opts);
     if (qField){
       summaryBar.model.set({quantity_field: qField }, {silent: true});
     }
 
-    // Set filters.
-    _.each(['base', 'primary'], function(filterCategory){
-      FiltersUtil.updateModelFilters(summaryBar.model, filterCategory, {silent: true, filterGroups: filterGroups});
-    });
+    summaryBar.initialized = true;
   };
 
-  // Define postInitialize hook.
-  var summaryBar_postInitialize = function(ctx, opts){
-    initializeSummaryBar(ctx);
-    connectSummaryBar(ctx);
+  var updateSummaryBarQuery = function(opts){
+    _.each(['base', 'primary'], function(filterCategory){
+      FiltersUtil.updateModelFilters(opts.summaryBar.model, filterCategory, opts);
+    });
   };
 
   var actionHandlers =  {};
@@ -170,6 +172,11 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
   // Connect summaryBar.
   actionHandlers.summaryBar_connect = function(ctx, opts){
     connectSummaryBar(ctx);
+  };
+
+  // Update summary bar filters.
+  actionHandlers.summaryBar_updateQuery= function(ctx, opts){
+    updateSummaryBarQuery(ctx);
   };
 
   // getData action handler.

@@ -292,6 +292,10 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         "type": "action"
       },
       {
+        "handler": "summaryBar_updateQuery",
+        "type": "action"
+      },
+      {
         "handler": "summaryBar_getData",
         "type": "action",
       }
@@ -316,6 +320,21 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       ]
     };
 
+    var summaryBarActionQueue = {
+      "async": false,
+      "type": "actionQueue",
+      "actions": [
+        {
+        "handler": "summaryBar_initialize",
+        "type": "action"
+      },
+      {
+        "handler": "summaryBar_connect",
+        "type": "action"
+      },
+      ]
+    };
+
     var initialActions = {
       async: false,
       type: "actionQueue",
@@ -323,6 +342,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         initialTimestepFacetActionQueue,
         initialSummaryBarActionQueue,
         mapActionQueue,
+        summaryBarActionQueue,
       ]
     };
 

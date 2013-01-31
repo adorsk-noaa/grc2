@@ -59,7 +59,6 @@ function($, Backbone, _, FormatUtil, MapEditorView, LayersUtil){
 
     // Connect layers when initialization is done.
     initializerDeferred.always(function(){
-      console.log("init is done");
       _.each(mapEditor.mapView.layerRegistry, function(layer){
         LayersUtil.connectLayer(layer, opts);
       });
