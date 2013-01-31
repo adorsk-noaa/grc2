@@ -17,23 +17,31 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
   };
 
   var setUpDataViews = function(ctx){
-    var dvState = ctx.state.dataViews || {};
-    ctx.dataViews = {};
-    ctx.dataViews.counter = dvState.counter || 0;
-    ctx.dataViews.defaults = dvState.defaults || {
+    var floatingDataViewsCollection = ctx.model.get("floatingDataViews");
+    if (! floatingDataViewsCollection){
+      floatingDataViewsCollection = new Backbone.Collection();
+      ctx.model.set('floatingDataViews', floatingDataViewsCollection);
+    }
+    ctx.floatingDataViews = {};
+    ctx.floatingDataViews.counter = 0;
+    if (! GeoRefine.config.floatingDataViews){
+      GeoRefine.config.floatingDataViews = {
+        defaults: {width: 485, height: 385}
+      };
+    }
+    ctx.floatingDataViews.defaults = GeoRefine.config.floatingDataViews.defaults || {
       width: 485,
       height: 300
     };
-    ctx.dataViews.container = $('.data-views-container', ctx.el);
-    ctx.dataViews.constraint = $('.data-views-constraint', ctx.el);
+    ctx.floatingDataViews.container = $('.data-views-container', ctx.el);
+    ctx.floatingDataViews.constraint = $('.data-views-constraint', ctx.el);
 
     // Initialize floating data views registry.
-    ctx.dataViews.floatingDataViews = dvState.floatingDataViews || {};
+    ctx.floatingDataViews.registry = {};
 
-    // @TODO: change this for new style.
     // Create any initial data views.
-    _.each(ctx.dataViews.floatingDataViews, function(floatingDataViewModel){
-      addFloatingDataView(ctx, floatingDataViewModel);
+    _.each(floatingDataViewsCollection.models, function(floatingDataViewModel){
+      addFloatingDataView(ctx, {model: floatingDataViewModel});
     });
   };
 
@@ -44,6 +52,11 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     initialize: function(opts){
       this.ctx = opts.ctx;
       this.opts = opts;
+
+      if (! this.model.get('window')){
+        this.model.set('window', createDefaultWindowModel(this.ctx, this.opts.window));
+      }
+
       this.initialRender();
 
       // Connect window events to data view.
@@ -70,7 +83,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
       this.window.on("close", this.remove, this);
 
       // Bump counter.
-      this.ctx.dataViews.counter += 1;
+      this.ctx.floatingDataViews.counter += 1;
 
       // Listen for ready event.
       this.on("ready", this.onReady, this);
@@ -85,17 +98,15 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     },
 
     renderWindow : function(){
-      var $dataViews = $(this.ctx.dataViews.container);
+      var $dataViews = $(this.ctx.floatingDataViews.container);
       var dvOffset = $dataViews.offset();
 
-      var windowModel = createDefaultWindowModel(this.ctx, this.opts.window);
-
       this.window = new Windows.views.WindowView({
-        model: windowModel,
+        model: this.model.get('window'),
         minimizable: false,
         maximizable: false,
         caller: $dataViews,
-        containment: $(this.ctx.dataViews.constraint)
+        containment: $(this.ctx.floatingDataViews.constraint)
       });
     },
 
@@ -123,10 +134,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
 
   var addFloatingDataView = function(ctx, opts){
 
-    var model = new Backbone.Model({
-      id: opts.id || Math.random(),
-      dataView: opts.dataViewModel
-    });
+    var model = opts.model || new Backbone.Model();
 
     // Create floating data view.
     var floatingDataView = new FloatingDataView({
@@ -135,7 +143,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     });
 
     // Register the floating data view.
-    ctx.dataViews.floatingDataViews[model.id] = floatingDataView;
+    ctx.floatingDataViews.registry[model.id] = floatingDataView;
 
     // Initialize and connect data view.
     initializeDataView(ctx, floatingDataView.dataView);
@@ -145,6 +153,8 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     if (ctx.initialized){
       floatingDataView.trigger('ready');
     }
+
+    return floatingDataView;
 
   };
 
@@ -159,23 +169,23 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     opts = opts || {};
 
     // Get data views container offset.
-    $dataViews = $(ctx.dataViewsContainer);
+    $dataViews = $(ctx.floatingDataViewsContainer);
     var dvOffset = $dataViews.offset();
 
     // Set default title.
     opts.title = opts.title || 'Window';
 
     // Add window number to title.
-    opts.title = _s.sprintf("%d | %s", ctx.dataViews.counter, opts.title);
+    opts.title = _s.sprintf("%d | %s", ctx.floatingDataViews.counter, opts.title);
 
     // Merge with defaults.
     opts = _.extend({
       "inline-block": true,
-      "width": ctx.dataViews.defaults.width,
-      "height": ctx.dataViews.defaults.height,
+      "width": ctx.floatingDataViews.defaults.width,
+      "height": ctx.floatingDataViews.defaults.height,
       // The next two lines slightly offset successive views.
-      "x": (ctx.dataViews.counter % 5) * 20,
-      "y": (ctx.dataViews.counter % 5) * 20,
+      "x": (ctx.floatingDataViews.counter % 5) * 20,
+      "y": (ctx.floatingDataViews.counter % 5) * 20,
       "showFooter": false,
       "scrollable": false
     }, opts);
@@ -196,49 +206,12 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     createFloatingDataView(opts);
   };
 
-  actionHandlers.dataViews_setMapLayerAttributes = function(ctx, opts){
-    var dataView = ctx.dataViews.floatingDataViews[opts.id];
-    var mapEditor = dataView.dataView;
-    _.each(opts.layers, function(layerOpts){
-      var layer = mapViewUtil.getMapEditorLayers(mapEditor, {layers: [layerOpts]}).pop();
-      layer.model.set(layerOpts.attributes);
-    });
-  };
-
-  actionHandlers.dataViews_selectChartFields = function(ctx, opts){
-    var dataView = ctx.dataViews.floatingDataViews[opts.id];
-    var chartEditor = dataView.dataView;
-    chartsUtil.selectFields(chartEditor, opts);
-  };
-
-  dataViews_alterState = function(state){
-    state.dataViews = state.dataViews || {};
-    state.dataViews.floatingDataViews = state.dataViews.floatingDataViews || {};
-
-    _.each(ctx.dataViews.floatingDataViews, function(fdv, id){
-      var serializedFdv = serializationUtil.serialize(fdv.model, state.serializationRegistry);
-      state.dataViews.floatingDataViews[id] = serializedFdv; 
-    });
-  };
-
-  dataViews_postInitialize = function(ctx){
-    _.each(ctx.dataViews.floatingDataViews, function(fdv){
-      fdv.trigger('ready');
-    });
-  };
-
   // Objects to expose.
   var dataViewUtil = {
     actionHandlers: actionHandlers,
     setUpDataViews: setUpDataViews,
     setUpWindows: setUpWindows,
     addFloatingDataView: addFloatingDataView,
-    alterStateHooks: [
-      dataViews_alterState
-    ],
-    postInitializeHooks : [
-      dataViews_postInitialize
-    ]
   };
   return dataViewUtil;
 });

@@ -312,6 +312,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       },
       {
         "type": "action",
+        "once": true,
         "handler": "mapEditor_setExtent",
         "opts": {
           "extent": [-3,-3,3,3]
@@ -379,5 +380,11 @@ GeoRefine.initialize = function($, Backbone, _, _s){
     {},
     generateResultsConfig()
   );
+
+  GeoRefine.config.floatingDataViews = {};
+  GeoRefine.config.floatingDataViews.defaults = {
+    width: 600,
+    height: 600,
+  };
 
 };

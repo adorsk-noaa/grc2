@@ -80,6 +80,7 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
       // When stateDeferred resolves, continue...
       stateDeferred.then(function(){
+        _this.model = _this.state.model || new Backbone.Model();
         _this.initialRender();
 
         // Execute initial actions.
@@ -167,22 +168,24 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       var deserializationRegistry = {};
       serializedModel = SerializationUtil.serialize(dataViewModel, serializationRegistry);
       dataViewModel = SerializationUtil.deserialize(serializedModel, deserializationRegistry, serializationRegistry);
-      FloatingDataViewsUtil.addFloatingDataView(this, {
-        dataViewModel: dataViewModel
+      var fdv = FloatingDataViewsUtil.addFloatingDataView(this, {
+        model: new Backbone.Model({
+          dataView: dataViewModel
+        })
       });
       // TESTING
-      if (! window.dvm){
-        window.dvm = dataViewModel;
+      if (! window.fdv){
+        window.fdv = fdv;
       }
     },
 
     cloneTest: function(){
       var serializationRegistry = {};
       var deserializationRegistry = {};
-      serializedModel = SerializationUtil.serialize(window.dvm, serializationRegistry);
-      dataViewModel = SerializationUtil.deserialize(serializedModel, deserializationRegistry, serializationRegistry);
+      serializedModel = SerializationUtil.serialize(window.fdv.model, serializationRegistry);
+      fdvModel = SerializationUtil.deserialize(serializedModel, deserializationRegistry, serializationRegistry);
       FloatingDataViewsUtil.addFloatingDataView(this, {
-        dataViewModel: dataViewModel
+        model: fdvModel
       });
     },
 
