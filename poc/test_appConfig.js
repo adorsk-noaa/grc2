@@ -8,7 +8,7 @@ if (! GeoRefine.config){
 
 // NORMALLY THIS WOULD BE IN THE CLIENT MAIN HTML PAGE.
 var geoRefineBaseUrl = 'http://localhost:8000/georefine';
-var projectId = 7;
+var projectId = 98;
 
 GeoRefine.app = {
   requestsEndpoint: geoRefineBaseUrl + '/projects/execute_requests/' + projectId + '/',
@@ -224,6 +224,64 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       })
     });
 
+    var timestepFacetActionQueue = {
+      "async": false,
+      "type": "actionQueue",
+      "actions": [
+        {
+        "handler": "facets_facet_add",
+        "type": "action",
+        "opts": {
+          "category": "base",
+          "fromDefinition": true,
+          "definitionId": "time",
+          "facetId": "time",
+        }
+      },
+      {
+        "handler": "facets_facet_initialize",
+        "type": "action",
+        "opts": {
+          "category": "base",
+          "id": "time"
+        }
+      },
+      {
+        "handler": "facets_facet_connect",
+        "type": "action",
+        "opts": {
+          "category": "base",
+          "id": "time"
+        }
+      },
+      {
+        "handler": "facets_facet_getData",
+        "type": "action",
+        "opts": {
+          "category": "base",
+          "id": "time"
+        }
+      },
+      {
+        "handler": "facets_facet_setSelection",
+        "type": "action",
+        "opts": {
+          "category": "base",
+          "index": 1,
+          "id": "time"
+        }
+      }
+      ]
+    };
+
+    var initialActions = {
+      async: false,
+      type: "actionQueue",
+      actions: [
+        timestepFacetActionQueue
+      ]
+    };
+
     var dvConfigs = {};
     _.each(fields, function(field){
       dvConfigs[field.id] = new Backbone.Model({
@@ -241,6 +299,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
           ) ,
           data_layers: new Backbone.Collection([dataLayers[field.id]])
         }),
+        initialActions: initialActions,
       })
     });
 

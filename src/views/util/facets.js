@@ -497,36 +497,35 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
   };
 
   var actionHandlers = {};
-  actionHandlers.facets_addFacet = function(ctx, opts){
+  actionHandlers.facets_facet_add = function(ctx, opts){
     if (opts.fromDefinition){
-      var predefinedFacets = ctx.facetsEditor.model.get('predefined_facets');
-      var facetDef = predefinedFacets.get(opts.defId).toJSON();
-      facetDef.id = opts.facetId;
-      var facetModel = ctx.facetsEditor.createFacetModelFromDef(facetDef);
-      ctx.facetsEditor.model.get('facets').add(facetModel);
+      var facetDefinitions = ctx.facetsEditor.model.get('facetDefinitions');
+      var facetDefModel = facetDefinitions.get(opts.definitionId);
+      ctx.facetsEditor.addFacetFromDefinition({
+        defModel: facetDefModel,
+        id: opts.facetId
+      });
     }
   };
 
-  actionHandlers.facets_initializeFacet = function(ctx, opts){
+  actionHandlers.facets_facet_initialize = function(ctx, opts){
     var facet = ctx.getFacetView(opts);
-    initializeFacet(facet, {filterGroups: ctx.filterGroups, qField: ctx.qField});
+    initializeFacet(facet, ctx);
   };
 
-  actionHandlers.facets_connectFacet = function(ctx, opts){
+  actionHandlers.facets_facet_connect= function(ctx, opts){
     var facet = ctx.getFacetView(opts);
-    var filterGroups = ctx.filterGroups;
-    var summaryBar = ctx.summaryBar;
-    connectFacet(facet, {filterGroups: filterGroups, summaryBar: summaryBar});
+    connectFacet(facet, ctx);
   };
 
-  actionHandlers.facets_facetGetData = function(ctx, opts){
+  actionHandlers.facets_facet_getData = function(ctx, opts){
     var facet = ctx.getFacetView(opts);
     if (facet.model.getData){
       return facet.model.getData(opts);
     }
   };
 
-  actionHandlers.facets_facetSetSelection = function(ctx, opts){
+  actionHandlers.facets_facet_setSelection = function(ctx, opts){
     var facet = ctx.getFacetView(opts);
     if (facet.model.get('type') == 'timeSlider'){
       if (opts.index != null){

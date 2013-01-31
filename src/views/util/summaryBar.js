@@ -17,7 +17,7 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
     var summaryBarModel = opts.model || new Backbone.Model();
     var summaryBarView = new SummaryBarView({
       el: opts.el,
-      model: summaryBarModel
+      model: summaryBarModel,
     });
 
     return summaryBarView;
@@ -154,6 +154,12 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
     });
   };
 
+  // Define postInitialize hook.
+  var summaryBar_postInitialize = function(ctx, opts){
+    initializeSummaryBar(ctx);
+    connectSummaryBar(ctx);
+  };
+
   var actionHandlers =  {};
 
   // Initialize summary bar.  Sets filters, qField.
@@ -193,6 +199,9 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
     initializeSummaryBar: initializeSummaryBar,
     actionHandlers: actionHandlers,
     deserializeConfigState: deserializeConfigState,
+    postInitializeHooks: [
+      summaryBar_postInitialize
+    ]
   };
   return exports;
 });

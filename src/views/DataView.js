@@ -32,8 +32,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       this.setupActionHandlers();
 
       var initialActionsDeferred = null;
-      //var initialActions = this.model.get('initialActions') || {};
-      var initialActions = null;
+      var initialActions = this.model.get('initialActions');
       if (initialActions){
         initialActionsDeferred = ActionsUtil.executeActions(this, initialActions);
       }
@@ -78,7 +77,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     setupSummaryBar: function(){
       this.summaryBar = SummaryBarUtil.createSummaryBar({
         model: this.model.get('summaryBar') || new Backbone.Model(),
-        el: $('.summary-bar', this.el)
+        el: $('.summary-bar', this.el),
       });
     },
 
