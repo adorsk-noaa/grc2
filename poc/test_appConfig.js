@@ -8,7 +8,7 @@ if (! GeoRefine.config){
 
 // NORMALLY THIS WOULD BE IN THE CLIENT MAIN HTML PAGE.
 var geoRefineBaseUrl = 'http://localhost:8000/georefine';
-var projectId = 98;
+var projectId = window.PROJECT_ID || 98;
 
 GeoRefine.app = {
   requestsEndpoint: geoRefineBaseUrl + '/projects/execute_requests/' + projectId + '/',
