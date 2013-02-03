@@ -100,14 +100,14 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     postInitialize: function(){
       console.log("DataView.postInitialize");
-      var _this = this;
 
-      // Listen for window resize events.
-      _this.on('resize', _this.resize, _this);
-      _this.on('resizeStop', _this.resizeStop, _this);
+      // Listen for window events.
+      this.on('resize', this.resize, this);
+      this.on('resizeStop', this.resizeStop, this);
+      this.on('pagePositionChange', this.pagePositionChange, this);
 
-      _this.on('ready', _this.onReady, _this);
-      _this.trigger("ready");
+      this.on('ready', this.onReady, this);
+      this.trigger("ready");
     },
 
     resize: function(){
@@ -119,6 +119,12 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     resizeStop: function(){
       _.each(this.subViews, function(subView){
         subView.trigger('resizeStop');
+      }, this);
+    },
+
+    pagePositionChange: function(){
+      _.each(this.subViews, function(subView){
+        subView.trigger('pagePositionChange');
       }, this);
     },
 

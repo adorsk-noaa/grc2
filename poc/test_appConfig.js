@@ -34,9 +34,21 @@ GeoRefine.initialize = function($, Backbone, _, _s){
     })
   };
 
+  var overlayLayers = {
+    graticule: new Backbone.Model({
+      layer_type:"Graticule",
+      label:"Lat/Lon Grid",
+      disabled: true,
+    })
+  };
+
   var defaultMap = new Backbone.Model({
-    max_extent: [-5, -5, 5, 5],
-    graticule_intervals:[2],
+    maxExtent: [-180, -90, 180, 90],
+    extent: [-70, 30, -65, 50],
+    resolutions:[0.025,0.0125,0.00625,0.003125,0.0015625,0.00078125],
+    options: {
+      allOverlays: true
+    },
     default_layer_options: {
       transitionEffect:"resize",
       tileSize:{"w":1024, "h":1024},
@@ -46,7 +58,6 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       disabled: true,
       reorderable: true
     },
-    resolutions:[0.025,0.0125,0.00625,0.003125,0.0015625,0.00078125],
   });
 
   var cellsFeatureQuery = new Backbone.Model({
@@ -75,20 +86,47 @@ GeoRefine.initialize = function($, Backbone, _, _s){
 
   /**************/
   var generateResultsConfig = function(){
-    var fields = [
+    var resultFields = [
       {
+      id: 'a',
+      label: 'A label',
+      scale_type: 'sequential',
+      colormapId: 'ColorBrewer:Rd',
+    },
+    {
+      id: 'y',
+      label: 'Y label',
+      scale_type: 'sequential',
+      colormapId: 'ColorBrewer:Pi',
+    },
+    {
+      id: 'x',
+      label: 'X label',
+      scale_type: 'sequential',
+      colormapId: 'ColorBrewer:Br',
+    },
+    {
       id: 'z',
       label: 'Z label',
-      scaleType: 'diverging',
+      scale_type: 'diverging',
       colormapId: 'ColorBrewer:PiG',
-      col: 'z',
+    },
+    {
+      id: 'znet',
+      label: 'Znet label',
+      scale_type: 'diverging',
+      colormapId: 'ColorBrewer:Rd:Bu',
     },
     ];
 
     var qFields = {};
-    _.each(fields, function(field){
+    _.each(resultFields, function(field){
+      if (! field.col){
+        field.col = field.id;
+      }
+      var modelOpts = {};
       var entityId = field.id + '_sum';
-      qFields[field.id] = new Backbone.Model({
+      $.extend(true, modelOpts, {
         id: field.id,
         label: field.label,
         format: '%.1H',
@@ -98,11 +136,14 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         outer_query: {
           SELECT: [{ID: entityId + '_sum', EXPRESSION: '__inner__' + entityId}]
         },
-      });
+      }, field);
+      qFields[field.id] = new Backbone.Model(modelOpts);
     });
 
-    var facetDefinitions = new Backbone.Collection([
-      new Backbone.Model({
+    var facetDefinitions = new Backbone.Collection();
+
+    // Timestep facet.
+    facetDefinitions.add(new Backbone.Model({
       id: 'time',
       label: 'Time',
       noClose: true,
@@ -120,69 +161,115 @@ GeoRefine.initialize = function($, Backbone, _, _s){
           SELECT: [{EXPRESSION: '__time__id', 'ID': 't'}]
         }
       },
-    }),
-    new Backbone.Model({
-      id: "energy",
-      info: 'da info',
-      info_link: "{{PROJECT_STATIC_DIR}}/sasipedia#energies/index.html",
-      inner_query: {
-        SELECT: [
-          {EXPRESSION: "__result__energy_id", ID: "energy_id"}
-        ],
-        GROUP_BY: [
-          {EXPRESSION: "__result__energy_id", ID: "energy_id"}
-        ],
-      },
-      outer_query: {
-        SELECT: [
-          {EXPRESSION: "__energy__id", ID: "energy_id"},
-          {EXPRESSION: "__energy__label", ID: "energy_label"}
-        ],
-        FROM: [
-          {
-          SOURCE: "energy",
-          JOINS: [
-            [
-              "inner",
-              [
-                {TYPE: "ENTITY", EXPRESSION: "__inner__energy_id"}, "==", 
-                {TYPE: "ENTITY", EXPRESSION: "__energy__id"} 
-              ]
-          ]
-          ]
-        }
-        ],
-        GROUP_BY: [
-          {ID: "energy_label"},
-          {ID: "energy_id"}
-        ],
-      },
-      base_filter_groups: ["scenario"],
+    }));
+
+    // Generic result facets.
+    var facetFields = [
+    {
+      id: 'substrate',
+      sasipediaId: 'substrates',
+      info: 'substrates info',
+      label: "Substrates",
+    },
+      {
+      id: 'energy',
+      sasipediaId: 'energies',
+      info: 'energy info',
       label: "Energies",
-      KEY: {
-        LABEL_ENTITY: {ID: "energy_label"},
-        QUERY: {
+    },
+    {
+      id: 'feature',
+      sasipediaId: 'features',
+      info: 'feature info',
+      label: "Features",
+    },
+    {
+      id: 'feature_category',
+      sasipediaId: 'feature_categories',
+      info: 'feature category info',
+      label: "Feature Categories",
+    },
+    {
+      id: 'gear',
+      sasipediaId: 'gears',
+      info: 'gear info',
+      label: "Gear",
+    },
+    ];
+
+    _.each(facetFields, function(field){
+      var modelOpts = {};
+      var idId = field.id + '_id';
+      var labelId = field.id + '_label';
+      var resultColExpression = '__result__' + idId;
+      var idColExpression = '__' + field.id + '__id';
+      var labelColExpression = '__' + field.id + '__label';
+      $.extend(true, modelOpts, {
+        info: 'da info',
+        info_link: "{{PROJECT_STATIC_DIR}}/sasipedia#" + field.sasipediaId + "/index.html",
+        inner_query: {
           SELECT: [
-            {EXPRESSION: "__energy__id", ID: "energy_id"},
-            {EXPRESSION: "__energy__label", ID: "energy_label"}
-          ]
+            {EXPRESSION: resultColExpression, ID: idId}
+          ],
+          GROUP_BY: [
+            {ID: idId}
+          ],
         },
-        KEY_ENTITY: {EXPRESSION: "__result__energy_id", ID: "energy_id"}
-      },
-      type: "list",
-      filter_entity: {TYPE: "ENTITY", EXPRESSION: "__result__energy_id", ID: "energy"},
-      primary_filter_groups: ["data"]
-    }),
-    ]);
+        outer_query: {
+          SELECT: [
+            {EXPRESSION: idColExpression, ID: idId},
+            {EXPRESSION: labelColExpression, ID: labelId}
+          ],
+          FROM: [
+            {
+            SOURCE: field.id,
+            JOINS: [
+              [
+                "inner",
+                [
+                  {TYPE: "ENTITY", EXPRESSION: "__inner__" + idId}, "==",
+                  {TYPE: "ENTITY", EXPRESSION: idColExpression}
+                ]
+            ]
+            ]
+          }
+          ],
+          GROUP_BY: [
+            {ID: labelId},
+            {ID: idId}
+          ],
+        },
+        KEY: {
+          LABEL_ENTITY: {ID: labelId},
+          QUERY: {
+            SELECT: [
+              {EXPRESSION: idColExpression, ID: idId},
+              {EXPRESSION: labelColExpression, ID: labelId}
+            ]
+          },
+          KEY_ENTITY: {EXPRESSION: resultColExpression, ID: idId}
+        },
+        label: field.label,
+        type: "list",
+        filter_entity: {TYPE: "ENTITY", EXPRESSION: resultColExpression, ID: field.id},
+        base_filter_groups: ["scenario"],
+        primary_filter_groups: ["data"]
+      }, field);
+
+      facetDefinitions.add(new Backbone.Model(modelOpts));
+
+    });
+
 
     var dataLayers = {};
-    _.each(fields, function(field){
+    _.each(resultFields, function(field){
       var densityId = field.col + '_density';
       var propertyMappings = {};
       propertyMappings[densityId] = densityId;
       dataLayers[field.id] = new Backbone.Model({
         id: field.id,
         colormapId: field.colormapId,
+        scale_type: field.scale_type,
         dataProp: densityId,
         layer_type: 'Vector',
         layer_category: 'data',
@@ -191,6 +278,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         vmin: 0,
         vmax: 1,
         disabled: false,
+        expanded: true,
         base_filter_groups: ['scenario'],
         primary_filter_groups: ['data'],
         featuresQuery: cellsFeatureQuery,
@@ -220,11 +308,18 @@ GeoRefine.initialize = function($, Backbone, _, _s){
             }
             ]
           },
+          }),
+          KEY: cellKeyEntity,
+          mappings: propertyMappings,
         }),
-        KEY: cellKeyEntity,
-        mappings: propertyMappings,
-        }),
-      })
+        styleMap: new Backbone.Collection(
+          [
+            new Backbone.Model({
+          id: 'default', 
+          strokeWidth: 0, 
+        })
+        ])
+      });
     });
 
     var initialTimestepFacetActionQueue = {
@@ -310,14 +405,6 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         "type": "action",
         "handler": "mapEditor_initializeMapEditor"
       },
-      {
-        "type": "action",
-        "once": true,
-        "handler": "mapEditor_setExtent",
-        "opts": {
-          "extent": [-3,-3,3,3]
-        }
-      }
       ]
     };
 
@@ -360,7 +447,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
     };
 
     var dvConfigs = {};
-    _.each(fields, function(field){
+    _.each(resultFields, function(field){
       dvConfigs[field.id] = new Backbone.Model({
         qField: qFields[field.id],
         filterGroups: ['scenario', 'data'],
@@ -377,7 +464,11 @@ GeoRefine.initialize = function($, Backbone, _, _s){
           base_layers: new Backbone.Collection(
             [baseLayers['world']]
           ) ,
-          data_layers: new Backbone.Collection([dataLayers[field.id]])
+          overlay_layers: new Backbone.Collection(
+            [
+              dataLayers[field.id],
+              overlayLayers.graticule,
+          ])
         }),
         initialActions: initialActions,
       })
@@ -395,7 +486,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
 
   GeoRefine.config.floatingDataViews = {};
   GeoRefine.config.floatingDataViews.defaults = {
-    width: 600,
+    width: 800,
     height: 600,
   };
 

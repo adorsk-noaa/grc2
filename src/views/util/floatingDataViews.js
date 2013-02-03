@@ -67,17 +67,18 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
         }
       }, this);
 
-      this.window.on("resizeStop", function(){
+      this.window.on("dragStop", function(){
         if (this.dataView){
-          this.dataView.trigger('resizeStop');
-          //Util.util.unsetWidthHeight(this.dataView.el);
+          this.dataView.trigger('pagePositionChange');
         }
       }, this);
 
-      _.each(['pagePositionChange', 'deactive', 'activate'], function(event){
-        this.window.on(event, function(){
-          this.dataView.trigger(event);
-        }, this);
+      _.each(['resizeStop', 'deactive', 'activate'], function(event){
+          this.window.on(event, _.bind(function(){
+            if (this.dataView){
+              this.dataView.trigger(event);
+            }
+          }, this));
       }, this);
 
       this.window.on("close", this.remove, this);
