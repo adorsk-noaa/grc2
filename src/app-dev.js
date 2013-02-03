@@ -35,7 +35,7 @@ function($, GeoRefineClientCss, GeoRefineClientView){
     cssDeferred.done(function(){
       new GeoRefineClientView({
         model: new Backbone.Model(),
-        el: $(GeoRefine.mainEl)
+        el: $(GeoRefine.config.mainEl)
       });
     });
   });

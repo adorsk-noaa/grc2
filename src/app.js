@@ -1,12 +1,13 @@
 require(
     [
         "jquery",
+        "backbone",
         "GeoRefineClient"
     ],
-    function($, GeoRefineClient){
+    function($, Backbone, GeoRefineClient){
       new GeoRefineClient.views.GeoRefineClientView({
         model: new Backbone.Model(),
-        el: $(GeoRefine.mainEl)
+        el: $(GeoRefine.config.mainEl)
       });
     }
 );
