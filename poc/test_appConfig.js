@@ -8,7 +8,7 @@ if (! GeoRefine.config){
 
 // NORMALLY THIS WOULD BE IN THE CLIENT MAIN HTML PAGE.
 var geoRefineBaseUrl = 'http://localhost:8000/georefine';
-var projectId = window.PROJECT_ID || 98;
+var projectId = window.PROJECT_ID || 112;
 
 GeoRefine.app = {
   requestsEndpoint: geoRefineBaseUrl + '/projects/execute_requests/' + projectId + '/',
@@ -336,14 +336,26 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       ]
     };
 
+    var facetsEditorActionQueue = {
+      "async": false,
+      "type": "actionQueue",
+      "actions": [
+        {
+        "type": "action",
+        "handler": "facetsEditor_connect"
+      },
+      ]
+    };
+
     var initialActions = {
       async: false,
       type: "actionQueue",
       actions: [
         initialTimestepFacetActionQueue,
         initialSummaryBarActionQueue,
-        mapActionQueue,
         summaryBarActionQueue,
+        facetsEditorActionQueue,
+        mapActionQueue,
       ]
     };
 

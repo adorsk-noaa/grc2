@@ -62,9 +62,8 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
   };
 
   // Define postInitialize hook.
-  var facetsEditor_postInitialize = function(ctx, opts){
+  var connectFacetsEditor = function(ctx, opts){
     var facetsEditor = ctx.facetsEditor;
-    var summaryBar = ctx.summaryBar;
 
     // Initialize and connect newly created facets.
     var facetCollectionView = facetsEditor.subViews.facets;
@@ -81,8 +80,6 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
         }
       });
     }
-
-    facetsEditor.trigger('ready');
   };
 
   /**
@@ -497,6 +494,10 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
   };
 
   var actionHandlers = {};
+  actionHandlers.facetsEditor_connect = function(ctx, opts){
+    connectFacetsEditor(ctx);
+  };
+
   actionHandlers.facets_facet_add = function(ctx, opts){
     if (opts.fromDefinition){
       var facetDefinitions = ctx.facetsEditor.model.get('facetDefinitions');
@@ -564,9 +565,6 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
     createFacetsEditor: createFacetsEditor,
     actionHandlers: actionHandlers,
     deserializeConfigState: deserializeConfigState,
-    postInitializeHooks: [
-      facetsEditor_postInitialize
-    ]
   };
 
   return exports;
