@@ -85,7 +85,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
 
 
   /**************/
-  var generateResultsConfig = function(){
+  var generateResultsConfigs = function(){
     var resultFields = [
       {
       id: 'a',
@@ -446,9 +446,10 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       ]
     };
 
-    var dvConfigs = {};
+    var dvConfigs = [];
     _.each(resultFields, function(field){
-      dvConfigs[field.id] = new Backbone.Model({
+      dvConfigs.push(new Backbone.Model({
+        label: field.label,
         qField: qFields[field.id],
         filterGroups: ['scenario', 'data'],
         summaryBar: new Backbone.Model({
@@ -471,18 +472,20 @@ GeoRefine.initialize = function($, Backbone, _, _s){
           ])
         }),
         initialActions: initialActions,
-      })
+      }));
     });
 
     return dvConfigs;
-
   };
+
   /**************/
 
-  GeoRefine.config.dataViewConfigurations = _.extend(
-    {},
-    generateResultsConfig()
-  );
+  GeoRefine.config.dataViewGroups = [
+    {
+    label: 'SASI Results',
+    models: generateResultsConfigs(),
+  }
+  ];
 
   GeoRefine.config.floatingDataViews = {};
   GeoRefine.config.floatingDataViews.defaults = {

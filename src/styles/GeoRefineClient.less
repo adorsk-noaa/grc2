@@ -18,19 +18,30 @@
     position: relative;
 
     > .header-cell{
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1.5em;
+      border-bottom: thin solid gray;
+      width: 100%;
+      padding: 5px;
+    }
+
+    .launchers-table {
+      ul {
+        margin: 0;
+        padding: 0;
+      }
+
+      li {
+        .button;
+        display: inline;
+        margin: 2px 5px;
+      }
     }
 
     > .data-views-cell{
       position: absolute;
-      top: 1.5em;
       bottom: 0;
       left: 0;
       right: 0;
+      padding: 5px;
     }
   }
 

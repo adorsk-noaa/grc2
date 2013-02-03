@@ -135,39 +135,59 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
     initialRender: function(){
       var _this = this;
-      var html = _.template(GeoRefineClientTemplate, {model: this.model});
-      $(this.el).html(html);
-      this.$qFieldSelector = $('#qFieldSelector');
-      //_.each(this.config.dataViewConfigurations, function(dvConfig, key){
-      _.each(GeoRefine.config.dataViewConfigurations, function(dvConfig, key){
-        $('<option value="' + key + '">' + key + '</option>').appendTo(_this.$qFieldSelector);
-      });
+      $(this.el).html(_.template(GeoRefineClientTemplate, {model: this.model}));
+      this.$headerCell = $('.header-cell', this.el);
+      this.$launchersTable = $('.launchers-table', this.$headerCell);
+      this.$dvCell = $('.data-views-cell', this.el);
+
+      this.renderDataViewLaunchers();
+      this.resize();
+
       FloatingDataViewsUtil.setUpWindows(this);
       FloatingDataViewsUtil.setUpDataViews(this);
+    },
+
+    renderDataViewLaunchers: function(){
+      _.each(GeoRefine.config.dataViewGroups, function(dvGroup){
+        var $groupRow = $('<tr class="launchers-group"></tr>');
+        this.$launchersTable.append($groupRow);
+
+        var $groupLabel = $('<td class="label"><h3>' + dvGroup.label + ': </h3></td>');
+        $groupRow.append($groupLabel);
+
+        var $launchersCell = $('<td class="launchers"></td>').appendTo($groupRow);
+        var $launchersList = $('<ul></ul>').appendTo($launchersCell);
+
+        _.each(dvGroup.models, function(dvModel){
+          var $launcher = $('<li class="launcher">' + dvModel.get('label') + '</li>');
+
+          $launcher.on('click', _.bind(function(){
+            dvModelCopy = SerializationUtil.copy(dvModel);
+            this.addDataView(dvModelCopy);
+          }, this));
+
+          $launchersList.append($launcher);
+
+        }, this);
+      }, this);
     },
 
     onReady: function(){
       this.resize();
       // TESTING
-      for (var k in GeoRefine.config.dataViewConfigurations){
-        this.$qFieldSelector.val(k);
-        break;
-      }
-      this.addDataView();
+      var dvModel = GeoRefine.config.dataViewGroups[0].models[0];
+      this.addDataView(SerializationUtil.copy(dvModel));
     },
 
     resize: function(){
+      var headerPos = this.$headerCell.position();
+      var headerHeight = this.$headerCell.outerHeight(true);
+      this.$dvCell.css('top', headerPos.top + headerHeight);
     },
 
-    addDataView: function(){
+    // TODO: change this to add from model.
+    addDataView: function(dataViewModel){
       // @TODO: get this dynamically.
-      var configKey = this.$qFieldSelector.val();
-      var dataViewModel = GeoRefine.config.dataViewConfigurations[configKey].clone();
-      // Serialize and deserialize the model to clone it.
-      var serializationRegistry = {};
-      var deserializationRegistry = {};
-      serializedModel = SerializationUtil.serialize(dataViewModel, serializationRegistry);
-      dataViewModel = SerializationUtil.deserialize(serializedModel, deserializationRegistry, serializationRegistry);
       var fdv = FloatingDataViewsUtil.addFloatingDataView(this, {
         model: new Backbone.Model({
           dataView: dataViewModel

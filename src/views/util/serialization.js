@@ -211,10 +211,19 @@ function($, Backbone, _, _s, Util){
     return obj;
   };
 
+  // Return an independent deep clone by serializing and then deserializing.
+  var copy = function(obj){
+    var serializationRegistry = {};
+    var deserializationRegistry = {};
+    var serializedObj = serialize(obj, serializationRegistry);
+    return deserialize(serializedObj, deserializationRegistry, serializationRegistry);
+  };
+
 
   var exports = {
     serialize: serialize,
-    deserialize: deserialize
+    deserialize: deserialize,
+    copy: copy,
   };
 
   return exports;
