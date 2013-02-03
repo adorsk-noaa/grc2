@@ -1,16 +1,16 @@
-if (typeof GRC_BASE_PATH == 'undefined'){
-  GRC_BASE_PATH = "";
+if (typeof BASE_PATH == 'undefined'){
+  BASE_PATH = "";
 }
 if (typeof ASSETS_PATH == 'undefined'){
-  ASSETS_PATH = GRC_BASE_PATH;
+  ASSETS_PATH = BASE_PATH;
 }
 
 if (typeof BASE_URL == 'undefined'){
-  BASE_URL = GRC_BASE_PATH;
+  BASE_URL = BASE_PATH;
 }
 
 var config= {
-  baseUrl: GRC_BASE_PATH,
+  baseUrl: BASE_URL,
   deps: [],
   paths: {
     requireLib: ASSETS_PATH + "/js/require",
@@ -147,7 +147,7 @@ var config= {
 
     {
       "name": "GeoRefineClient",
-      "location": GRC_BASE_PATH + "/src"
+      "location": BASE_PATH + "/src"
     },
 
     {
