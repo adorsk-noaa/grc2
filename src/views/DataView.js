@@ -9,9 +9,10 @@ define([
        './util/state',
        './util/map',
        'text!./templates/DataView.html',
-       'Util'
+       'Util',
+       'tabble',
 ],
-function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil, DataViewTemplate, Util){
+function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil, DataViewTemplate, Util, Tabble){
 
   var hookModules = [FacetsUtil, FiltersUtil, SummaryBarUtil, MapUtil];
 
@@ -50,7 +51,9 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     initialRender: function(){
       $(this.el).html(_.template(DataViewTemplate, {}));
       this.$table = $('> table', this.el);
-      this.$rightTable = $('.right-cell-table', this.el);
+      this.$table.tabble({
+        stretchTable: true
+      });
     },
 
     initializeFilterGroups: function(){
@@ -100,6 +103,8 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     postInitialize: function(){
       console.log("DataView.postInitialize");
+      this.resize();
+      this.resizeStop();
 
       // Listen for window events.
       this.on('resize', this.resize, this);
@@ -111,15 +116,18 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     },
 
     resize: function(){
+      Util.util.fillParent(this.$table);
       _.each(this.subViews, function(subView){
         subView.trigger('resize');
       }, this);
     },
 
     resizeStop: function(){
+      this.$table.tabble('resize');
       _.each(this.subViews, function(subView){
         subView.trigger('resizeStop');
       }, this);
+      Util.util.unsetWidthHeight(this.el);
     },
 
     pagePositionChange: function(){

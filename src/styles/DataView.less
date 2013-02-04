@@ -8,58 +8,51 @@
 @import url("require:uiExtras/styles/jquery.ui.selectmenu.css");
 @import url("require:Util/styles/util.less");
 @import url("require:ui/css/smoothness/jquery-ui-1.9.1.custom.css");
+@import url("require:tabble/jquery.ui.tabble.less");
 
 @import "SummaryBar.less";
 
 .dataview{
   padding: 5px 5px 10px 5px;
-  > .inner{
-    position: relative;
-    overflow: scroll;
+  display: inline-block;
+  > table {
     width: 100%;
     height: 100%;
 
-    .left-cell{
-      position: absolute;
-      width: 260px;
-      left: 0;
-      top: 0;
-      bottom: 0;
+    > tbody > tr > td > .ui-tabble-tab {
+      background-color: inherit;
     }
+  }
 
-    .right-cell{
-      position: absolute;
-      left: 260px;
-      right: 0;
-      top: 0;
-      bottom: 0;
+  .summary-bar-cell {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 5em;
+    padding: 10px;
+  }
 
-      .summary-bar-cell {
-        position: absolute;
-        top: 0;
-        right: 0;
-        left: 0;
-        height: 5em;
-        padding: 10px;
-      }
+  .map-editor-cell {
+    position: absolute;
+    top: 5em;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    padding: 10px;
+  }
 
-      .map-editor-cell {
-        position: absolute;
-        top: 5em;
-        right: 0;
-        left: 0;
-        bottom: 0;
-        padding: 10px;
-      }
-    }
+  .facets-header {
+    .button;
+  }
 
-    .facets-editor {
-      height: 100%;
-    }
+  .facets-editor {
+    height: 100%;
+    width: 260px;
+  }
 
-    .map-editor {
-      height: 100%;
-      width: 100%;
-    }
+  .map-editor {
+    height: 100%;
+    width: 100%;
   }
 }
