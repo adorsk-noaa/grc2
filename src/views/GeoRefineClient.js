@@ -7,8 +7,9 @@ define([
        './util/actions',
        './util/floatingDataViews',
        './util/serialization',
+       'qtip',
 ],
-function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUtil, SerializationUtil){
+function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUtil, SerializationUtil, qtip){
 
   // Setup GeoRefine singleton.
   if (! GeoRefine){
@@ -22,18 +23,30 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
   var GeoRefineClientView = Backbone.View.extend({
     events: {
-      'click .addView': 'addDataView',
-      'click .cloneTest': 'cloneTest'
+      'click .saveTestState': 'saveTestState',
+    },
+
+    saveTestState: function(){
+      console.log("sts", this.model);
+      var reg = {};
+      var serializedModel = SerializationUtil.serialize(this.model, reg);
+      var state = {
+        model: serializedModel,
+        registry: reg,
+      };
+      var jsonState = JSON.stringify(state, null, 2);
+      console.log("slength", jsonState.length);
+      localStorage['testState'] = jsonState;
     },
 
     initialize: function(opts){
-
-
       var _this = this;
       opts = opts || {};
       this.config = opts.config || {};
 
       $(this.el).addClass('georefine-client');
+
+      this.subViews = {};
 
       this.on('ready', this.onReady, this);
 
@@ -45,8 +58,11 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       var hash = window.location.hash;
 
       // Parse state key.
-      if (keyMatch = new RegExp('\/stateKey=(.*)\/').exec(hash)){
+      if (keyMatch = new RegExp('stateKey=(.*)').exec(hash)){
         opts.stateKey = keyMatch[1];
+      }
+      if (new RegExp('testState').exec(hash)){
+        opts.testState = true;
       }
 
       // Deferred object for handling state load.
@@ -59,11 +75,30 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
           url: _this.config.keyedStringsEndpoint + '/getString/' + opts.stateKey,
           type: 'GET',
           success: function(data){
-            serializedState = JSON.parse(data.s);
+            var serializedState = JSON.parse(data.s);
             _this.state = _this.deserializeState(serializedState);
             stateDeferred.resolve();
           }
         });
+      }
+      else if (opts.testState) {
+        try {
+          var serializedState = JSON.parse(localStorage['testState']);
+          console.log("ss: ", serializedState);
+          var model = SerializationUtil.deserialize({
+            obj: serializedState.model,
+            serializedRegistry: serializedState.registry,
+          });
+          _this.state = {
+            model: model,
+          };
+          console.log("ds: ", _this.state);
+          stateDeferred.resolve();
+        }
+        catch (err){
+          throw err;
+          stateDeferred.reject();
+        }
       }
 
       // Otherwise if serialized state was passed in options...
@@ -73,69 +108,81 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
       // Otherwise, get state from config.
       else{
-        var configState = _this.config.defaultInitialState || {};
-        _this.state = _this.deserializeConfigState(configState);
+        _this.state = {}
         stateDeferred.resolve();
       }
 
-      // When stateDeferred resolves, continue...
-      stateDeferred.then(function(){
-        _this.model = _this.state.model || new Backbone.Model();
-        _this.initialRender();
-
-        // Execute initial actions.
-        var actionsDeferred = null;
-        if (_this.state.initialActions){
-          actionsDeferred = ActionsUtil.executeActions(_this.state.initialActions);
-        }
-        else{
-          actionsDeferred = $.Deferred();
-          actionsDeferred.resolve();
-        }
-
-        // When initial actions are completed, continue...
-        actionsDeferred.done(function(){
-          _this.initialized = true;
-          _this.trigger("ready");
-          _this.postInitialize();
-
-        });
-
+      stateDeferred.fail(function(){
+        console.log('fail');
       });
+
+      // When stateDeferred resolves, continue...
+      stateDeferred.then(_.bind(this.afterLoadState, this));
     },
 
-    // @TODO: figure out how to do this more modularly, how to handle common registries.
-    deserializeState: function(serializedState, deserializationRegistry, serializationRegistry){
-    },
+    afterLoadState: function(){
+      console.log('after load state');
+      this.model = this.state.model || new Backbone.Model();
 
-    deserializeConfigState: function(configState){
-      if (! configState){
-        return {};
+      if (! this.model.get('floating_data_views')){
+        this.model.set('floating_data_views', new Backbone.Collection());
       }
-      return {};
+
+      this.initialRender();
+
+      // Execute initial actions.
+      var actionsDeferred = null;
+      if (this.state.initialActions){
+        actionsDeferred = ActionsUtil.executeActions(this.state.initialActions);
+      }
+      else{
+        actionsDeferred = $.Deferred();
+        actionsDeferred.resolve();
+      }
+
+      // When initial actions are completed, continue...
+      actionsDeferred.done(_.bind(this.postInitialize, this));
     },
 
     postInitialize: function(){
+      this.initialized = true;
+
       // Listen for window resize events.
       this.on('resize', this.resize, this);
       var _this = this;
-      var onWindowResize = function(){
-        if (_this._windowResizeTimeout){
-          clearTimeout(_this.windowResizeTimeout);
+      var onWindowResize = _.bind(function(){
+        if (this._windowResizeTimeout){
+          clearTimeout(this.windowResizeTimeout);
         }
-        _this.windowResizeTimeout = setTimeout(function(){
-          _this._windowResizeTimeout = false;
-          _this.trigger('resize');
-        }, 200);
-      };
+        this.windowResizeTimeout = setTimeout(_.bind(function(){
+          this._windowResizeTimeout = false;
+          this.trigger('resize');
+        }, this), 200);
+      }, this);
       $(window).resize(onWindowResize);
 
-      // Call post initialize hooks.
+      this.trigger("ready");
     },
 
     initialRender: function(){
       var _this = this;
       $(this.el).html(_.template(GeoRefineClientTemplate, {model: this.model}));
+
+      $('.showTestState', this.el).qtip({
+        content: {
+          text: function(){
+            return localStorage['testState'] || 'empty';
+          }
+        },
+        show: {
+          event: 'click'
+        },
+        hide: {
+          fixed: true,
+          event: 'unfocus',
+        }
+      });
+
       this.$headerCell = $('.header-cell', this.el);
       this.$launchersTable = $('.launchers-table', this.$headerCell);
       this.$dvCell = $('.data-views-cell', this.el);
@@ -163,7 +210,8 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
           $launcher.on('click', _.bind(function(){
             dvModelCopy = SerializationUtil.copy(dvModel);
-            this.addDataView(dvModelCopy);
+            var fdvCollection = this.model.get('floating_data_views');
+            fdvCollection.add(dvModelCopy);
           }, this));
 
           $launchersList.append($launcher);
@@ -174,36 +222,38 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
     onReady: function(){
       this.resize();
+      _.each(this.subViews, function(subView){
+        subView.trigger('ready');
+      }, this);
+
       // TESTING
       var dvModel = GeoRefine.config.dataViewGroups[0].models[0];
-      this.addDataView(SerializationUtil.copy(dvModel));
+      var fdvCollection = this.model.get('floating_data_views');
+      //fdvCollection.add(SerializationUtil.copy(dvModel));
     },
 
     resize: function(){
       var headerPos = this.$headerCell.position();
       var headerHeight = this.$headerCell.outerHeight(true);
       this.$dvCell.css('top', headerPos.top + headerHeight);
+      _.each(this.subViews, function(subView){
+        subView.trigger('resize');
+      }, this);
     },
 
-    // TODO: change this to add from model.
-    addDataView: function(dataViewModel){
-      // @TODO: get this dynamically.
-      var fdv = FloatingDataViewsUtil.addFloatingDataView(this, {
-        model: new Backbone.Model({
-          dataView: dataViewModel
-        })
-      });
-      // TESTING
-      if (! window.fdv){
-        window.fdv = fdv;
-      }
+    resizeStop: function(){
+      _.each(this.subViews, function(subView){
+        subView.trigger('resizeStop');
+      }, this);
     },
 
     cloneTest: function(){
       var serializationRegistry = {};
-      var deserializationRegistry = {};
       serializedModel = SerializationUtil.serialize(window.fdv.model, serializationRegistry);
-      fdvModel = SerializationUtil.deserialize(serializedModel, deserializationRegistry, serializationRegistry);
+      fdvModel = SerializationUtil.deserialize({
+        obj: serializedModel, 
+        serializedRegistry: serializationRegistry,
+      });
       FloatingDataViewsUtil.addFloatingDataView(this, {
         model: fdvModel
       });

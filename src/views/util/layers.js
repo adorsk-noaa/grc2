@@ -102,6 +102,10 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
           id: datum.fid,
           geometry: JSON.parse(datum.geometry)
         });
+
+        // Flag features so that they do not get serialized.
+        featureModel._noSerialize = true;
+
         features.add(featureModel);
       });
       deferred.resolve();

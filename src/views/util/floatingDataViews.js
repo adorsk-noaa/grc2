@@ -17,10 +17,10 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
   };
 
   var setUpDataViews = function(ctx){
-    var floatingDataViewsCollection = ctx.model.get("floatingDataViews");
-    if (! floatingDataViewsCollection){
-      floatingDataViewsCollection = new Backbone.Collection();
-      ctx.model.set('floatingDataViews', floatingDataViewsCollection);
+    var fdvCollection = ctx.model.get("floating_data_views");
+    if (! fdvCollection){
+      fdvCollection = new Backbone.Collection();
+      ctx.model.set('floating_data_views', fdvCollection);
     }
     ctx.floatingDataViews = {};
     ctx.floatingDataViews.counter = 0;
@@ -36,12 +36,17 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     ctx.floatingDataViews.container = $('.data-views-container', ctx.el);
     ctx.floatingDataViews.constraint = $('.data-views-constraint', ctx.el);
 
-    // Initialize floating data views registry.
-    ctx.floatingDataViews.registry = {};
-
     // Create any initial data views.
-    _.each(floatingDataViewsCollection.models, function(floatingDataViewModel){
-      addFloatingDataView(ctx, {model: floatingDataViewModel});
+    _.each(fdvCollection.models, function(fdvModel){
+      addFloatingDataView(ctx, {model: fdvModel});
+    });
+
+    // Listen for changes to data views.
+    fdvCollection.on('add', function(fdvModel){
+      addFloatingDataView(ctx, {model: fdvModel});
+    });
+    fdvCollection.on('remove', function(fdvModel){
+      removeFloatingDataView(ctx, {model: fdvModel});
     });
   };
 
@@ -143,8 +148,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
       ctx: ctx
     });
 
-    // Register the floating data view.
-    ctx.floatingDataViews.registry[model.id] = floatingDataView;
+    ctx.subViews[model.cid] = floatingDataView;
 
     // Initialize and connect data view.
     initializeDataView(ctx, floatingDataView.dataView);
@@ -157,6 +161,10 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
 
     return floatingDataView;
 
+  };
+
+  var removeFloatingDataView = function(ctx, opts){
+    delete ctx.subViews[opts.model.cid];
   };
 
   var initializeDataView = function(ctx, dataView){

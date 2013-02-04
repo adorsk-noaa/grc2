@@ -48,7 +48,7 @@ function($, Backbone, _, _s, Util){
 
       // For each model attribute + cid...
       _.each(_.extend(model.toJSON(), {cid: model.cid}), function(value, attr){
-        // Serialize the value.
+        if (typeof value == 'object' && value._noSerialize){return;}
         serializedModel[attr] = serialize(value, registry);
       });
 
@@ -77,6 +77,7 @@ function($, Backbone, _, _s, Util){
       // Add serialized models.
       serializedCollection.models = [];
       _.each(collection.models, function(model){
+        if (model._noSerialize){return;}
         serializedCollection.models.push(serialize(model, registry));
       });
 
@@ -127,7 +128,11 @@ function($, Backbone, _, _s, Util){
         // If attr is not 'cid'...
         if (attr != 'cid'){
           // Save the deserialized value to the attrs.
-          attrs[attr] = deserialize(value, deserializedRegistry, serializedRegistry);
+          attrs[attr] = deserialize({
+            obj: value,
+            deserializedRegistry: deserializedRegistry, 
+            serializedRegistry: serializedRegistry
+          });
         }
       });
 
@@ -154,7 +159,11 @@ function($, Backbone, _, _s, Util){
       // Get deserialized models.
       var deserializedModels = [];
       _.each(serializedCollection.models, function(model){
-        deserializedModels.push(deserialize(model, deserializedRegistry, serializedRegistry));
+        deserializedModels.push(deserialize({
+          obj: model,
+          deserializedRegistry: deserializedRegistry,
+          serializedRegistry: serializedRegistry
+        }));
       });
 
       // Create collection from the models.
@@ -173,7 +182,15 @@ function($, Backbone, _, _s, Util){
   var keyRe = /_{{(.*):(.*)}}_/;
 
   // Given a serialized object and a registry, deserialize it.
-  var deserialize = function(obj, deserializedRegistry, serializedRegistry){
+  var deserialize = function(opts){
+    var mergedOpts = {};
+    _.extend(mergedOpts, {
+      deserializedRegistry: {}
+    }, opts);
+    var obj = mergedOpts.obj
+    var deserializedRegistry = mergedOpts.deserializedRegistry;
+    var serializedRegistry = mergedOpts.serializedRegistry;
+
     // If object is a string and matches the token pattern, deserialize it with the corresponding
     // deserializer.
     if (typeof obj == 'string'){
@@ -195,13 +212,21 @@ function($, Backbone, _, _s, Util){
       if (obj instanceof Array){
         deserializedObj = [];
         _.each(obj, function(value){
-          deserializedObj.push(deserialize(value, deserializedRegistry, serializedRegistry));
+          deserializedObj.push(deserialize({
+            obj: value,
+            deserializedRegistry: deserializedRegistry,
+            serializedRegistry: serializedRegistry,
+          }));
         });
       }
       else{
         deserializedObj = {};
         _.each(obj, function(value, attr){
-          deserializedObj[attr] = deserialize(value, deserializedRegistry, serializedRegistry);
+          deserializedObj[attr] = deserialize({
+            obj: value,
+            deserializedRegistry: deserializedRegistry,
+            serializedRegistry: serializedRegistry,
+          });
         });
       }
       return deserializedObj;
@@ -216,7 +241,11 @@ function($, Backbone, _, _s, Util){
     var serializationRegistry = {};
     var deserializationRegistry = {};
     var serializedObj = serialize(obj, serializationRegistry);
-    return deserialize(serializedObj, deserializationRegistry, serializationRegistry);
+    return deserialize({
+      obj: serializedObj,
+      deserializedRegistry: deserializationRegistry,
+      serializedRegistry: serializationRegistry
+    });
   };
 
 
