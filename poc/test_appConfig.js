@@ -68,19 +68,6 @@ GeoRefine.initialize = function($, Backbone, _, _s){
     ]
   });
 
-  var cellKeyEntity = new Backbone.Model({
-    KEY_ENTITY: {
-      EXPRESSION: '__result__cell_id',
-      ID: 'cell_id',
-      ALL_VALUES: true
-    },
-    QUERY: {
-      ID: 'kq',
-      SELECT: [
-        {ID: 'cell_id', EXPRESSION: '__cell__id'},
-      ]
-    }
-  });
 
   var generateListFacetModel = function(opts){
     var field = opts.field;
@@ -148,8 +135,9 @@ GeoRefine.initialize = function($, Backbone, _, _s){
   var generateDataLayerModel = function(opts){
     var field = opts.field;
     var densityId = field.col + '_density';
-    var propertyMappings = {};
-    propertyMappings[densityId] = densityId;
+    var propertyMappings = [
+      {source: densityId, target: densityId, default: 0.0},
+    ];
 
     var scaleOpts;
     if (field.scale_type == 'sequential'){
@@ -207,7 +195,19 @@ GeoRefine.initialize = function($, Backbone, _, _s){
             ]
           },
         }),
-        KEY: cellKeyEntity,
+        KEY: new Backbone.Model({
+          KEY_ENTITY: {
+            EXPRESSION: '__' + opts.table + '__cell_id',
+            ID: 'cell_id',
+            ALL_VALUES: true
+          },
+          QUERY: {
+            ID: 'kq',
+            SELECT: [
+              {ID: 'cell_id', EXPRESSION: '__cell__id'},
+            ]
+          }
+        }),
         mappings: propertyMappings,
       }),
       styleMap: new Backbone.Collection(

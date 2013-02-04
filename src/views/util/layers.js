@@ -26,10 +26,12 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
           return;
         }
         var newProperties = {};
-        _.each(this.model.get('propertiesQuery').get('mappings'), function(col, prop){
-          if (datum.data.properties && typeof datum.data.properties[col] != 'undefined'){
-            newProperties[prop] = datum.data.properties[col];
+        _.each(this.model.get('propertiesQuery').get('mappings'), function(mapping){
+          var val = mapping.default;
+          if (datum.data.properties && typeof datum.data.properties[mapping.source] != 'undefined'){
+            val = datum.data.properties[mapping.source];
           }
+          newProperties[mapping.target] = val;
         }, this);
         featureModel.get('properties').set(newProperties);
       }, this);
