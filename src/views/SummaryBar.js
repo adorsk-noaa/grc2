@@ -40,9 +40,13 @@ function($, Backbone, _, _s, ui, Util, template){
       }
 
       var format = '%s';
+      var scale_type;
+      var scale_mid;
       var qField = this.model.get('quantity_field');
       if (qField){
         format = qField.get('format');
+        scale_mid = qField.get('scale_mid') || 0;
+        scale_type = qField.get('scale_type') || 'sequential';
       }
 
       var formatted_selected = this.formatter(format, data.selected);
@@ -57,10 +61,70 @@ function($, Backbone, _, _s, ui, Util, template){
 
       $(".text .selected", this.el).html(formatted_selected);
       $(".text .total", this.el).html(_s.sprintf('(<span class="pct">%.1f%%</span> of %s total)', percentage, formatted_total));
-      $('.scalebar-fill', this.el).css('width', percentage + '%');
+
+      var scaleBarOpts = {
+        $sbContainer: $('.scalebar-container', this.el),
+        $selected: $('.scalebar-fill.selected', this.el),
+        $total: $('.scalebar-fill.total', this.el),
+        data: data,
+        percentage: percentage,
+      };
+
+      if (scale_type == 'diverging'){
+        this.formatDivergingScalebar(scaleBarOpts);
+      }
+      else{
+        this.formatSequentialScalebar(scaleBarOpts);
+      }
 
       this.trigger('change:size');
 
+    },
+
+    formatDivergingScalebar: function(opts){
+      opts.$sbContainer.removeClass('sequential');
+      opts.$sbContainer.addClass('diverging');
+
+      _.each(['total', 'selected'], function(ts){
+        var neg = (opts.data[ts] < 0);
+        var $sbFill = opts['$' + ts];
+        var right = neg ? '50%' : '';
+        var left = neg ? '' : '50%';
+        $sbFill.toggleClass('negative', neg);
+        $sbFill.css({
+          left: left,
+          right: right,
+        })
+      });
+      opts.$total.css({
+        width: '50%',
+      });
+      opts.$selected.css({
+        width: opts.percentage * .5 + '%',
+      });
+    },
+
+    formatSequentialScalebar: function(opts){
+      opts.$sbContainer.removeClass('diverging');
+      opts.$sbContainer.addClass('sequential');
+      var neg = (opts.data.total < 0);
+      var left = neg ? '' : 0;
+      var right = neg ? 0 : '';
+
+      _.each(['total', 'selected'], function(ts){
+        var $sbFill = opts['$' + ts];
+        $sbFill.toggleClass('negative', neg);
+        $sbFill.css({
+          left: left,
+          right: right,
+        })
+      });
+      opts.$total.css({
+        width: '100%',
+      });
+      opts.$selected.css({
+        width: opts.percentage + '%',
+      });
     },
 
     // Update display on ready.

@@ -8,15 +8,45 @@
 
     .count-image{
       width: 100%;
+
       .scalebar-container{
-        border: thin solid @faint_grey;
+        border: thin solid @light_grey;
         display: block;
         height: 1em;
-      }
-      .scalebar-fill{
-        height: 100%;
-        background-color: @chrome_primary;
-        display: block;
+        width: 100%;
+        position: relative;
+
+        .scalebar-fill{
+          position: absolute;
+          height: 100%;
+          background-color: @chrome_primary;
+
+          &.negative {
+            background-color: #ffbacb;
+          }
+          &.total {
+            z-index: 1;
+            opacity: .5;
+          }
+          &.selected {
+            z-index: 2;
+          }
+
+        }
+
+        .mid-line {
+          display: none;
+          position: absolute;
+          left: 49.5%;
+          width: 1%;
+          background-color: #999;
+        }
+
+        &.diverging{
+          .mid-line {
+            display: block;
+          }
+        }
       }
     }
 

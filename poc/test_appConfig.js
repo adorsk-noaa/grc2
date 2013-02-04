@@ -77,6 +77,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
     var tableColExpression = '__' + opts.table + '__' + idId;
     var idColExpression = '__' + field.id + '__id';
     var labelColExpression = '__' + field.id + '__label';
+
     $.extend(true, modelOpts, {
       info: 'da info',
       info_link: "{{PROJECT_STATIC_DIR}}/sasipedia#" + field.sasipediaId + "/index.html",
@@ -139,25 +140,23 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       {source: densityId, target: densityId, default: 0.0},
     ];
 
-    var scaleOpts;
-    if (field.scale_type == 'sequential'){
-      scaleOpts = {
-        vmin: 0,
-        vmaxAuto: true,
-      };
-    }
-    else if (field.scale_type == 'diverging'){
-      scaleOpts = {
-        vmid: 0,
-        vrAuto: true,
-      };
-    }
+    var scaleOpts = {};
+    if (field.scale){
+      scaleOpts.scale_type = field.scale_type;
+      if (scaleOpts.type == 'sequential'){
+        scaleOpts.vmin = 0;
+        scaleOpts.vmaxAuto = true;
+      }
+      else if (scaleOpts.type == 'diverging'){
+        scaleOpts.vmid = field.scale_mid;
+        scaleOpts.vrAuto = true;
+      }
+    };
 
     var modelOpts = {};
     $.extend(true, modelOpts, scaleOpts, {
       id: field.id,
       colormapId: field.colormapId,
-      scale_type: field.scale_type,
       dataProp: densityId,
       layer_type: 'Vector',
       layer_category: 'data',
@@ -359,6 +358,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         field.col = field.id;
       }
       var modelOpts = {};
+
       var entityId = field.id + '_sum';
       $.extend(true, modelOpts, {
         id: field.id,
@@ -477,12 +477,14 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         id: 'z',
         label: 'Z label',
         scale_type: 'diverging',
+        scale_mid: 0,
         colormapId: 'ColorBrewer:PiG',
       },
       {
         id: 'znet',
         label: 'Znet label',
         scale_type: 'diverging',
+        scale_mid: 0,
         colormapId: 'ColorBrewer:Rd:Bu',
       },
       ],
