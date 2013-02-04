@@ -388,6 +388,12 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
     if (opts.qField){
       facet.model.set({quantity_field: opts.qField}, {silent: true});
     }
+    if (opts.summaryBar){
+      var data = opts.summaryBar.model.get('data');
+      if (data){
+        facet.model.set('total', data.total);
+      }
+    }
     facet.updateFilters();
     updateFacetModelPrimaryFilters(facet.model, {silent: true, filterGroups: opts.filterGroups});
     FiltersUtil.updateModelFilters(facet.model, 'base', {silent: true, filterGroups: opts.filterGroups});
