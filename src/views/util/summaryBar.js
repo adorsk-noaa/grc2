@@ -138,7 +138,6 @@ function($, Backbone, _, _s, Util, SummaryBarView, FiltersUtil, FormatUtil, Seri
   };
 
   var initializeSummaryBar = function(opts){
-    console.log('initializeSummaryBar');
     var summaryBar = opts.summaryBar;
 
     if (summaryBar.initialized){

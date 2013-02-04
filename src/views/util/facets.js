@@ -536,35 +536,9 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
     }
   };
 
-
-  // Define alterState hook for saving facetEditor state.
-  var facetsEditor_alterState = function(ctx, state){
-    state.facetsEditor = serializationUtil.serialize(ctx.facetsEditor.model, state.serializationRegistry);
-  };
-
-  var deserializeConfigState = function(configState, deserializedState){
-    if (! configState.facetsEditor){
-      return;
-    }
-    var facetsEditorModel = new Backbone.Model();
-
-    // Make collections and models for facet editor sub-collections.
-    _.each(['facets', 'predefined_facets'], function(attr){
-      var collection = new Backbone.Collection();
-      _.each(configState.facetsEditor[attr], function(modelDef){
-        var model = new Backbone.Model(_.extend({}, modelDef));
-        collection.add(model);
-      });
-      facetsEditorModel.set(attr, collection);
-    });
-
-    deserializedState.facetsEditor = facetsEditorModel;
-  };
-
   var exports = {
     createFacetsEditor: createFacetsEditor,
     actionHandlers: actionHandlers,
-    deserializeConfigState: deserializeConfigState,
   };
 
   return exports;

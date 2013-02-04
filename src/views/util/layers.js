@@ -11,7 +11,7 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
    * Define custom functions.
    */
   var vectorDataLayerGetProperties = function(){
-    console.log('vdlgd', this);
+    console.log('vdlgp', this);
 
     var features = this.model.get('features');
 
@@ -45,17 +45,24 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
   };
 
   var vectorDataLayerUpdatePropertiesQuery = function(){
-    console.log('vdluq', this);
+    console.log('vdlupq', this);
     var setObj = {};
+    var query = this.model.get('propertiesQuery');
     _.each(['base', 'primary'], function(filterCategory){
       var attr = filterCategory + '_filters';
-      setObj[attr] = this.model.get(attr);
+      var newVal = this.model.get(attr);
+      var oldVal = query.get(attr);
+      if (! _.isEqual(newVal, oldVal)){
+        setObj[attr] = this.model.get(attr);
+      }
+      else{
+      }
     }, this);
     this.model.get('propertiesQuery').set(setObj);
   };
 
   var vectorDataLayerExecutePropertiesQuery = function(){
-    console.log('vedq', this);
+    console.log('vdledpq', this);
     var query = this.model.get('propertiesQuery');
     var qfield  = query.get('quantity_field');
     if (! qfield){
@@ -122,7 +129,7 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
   };
 
   var vectorDataLayerExecuteFeaturesQuery = function(){
-    console.log('vdefq', this);
+    console.log('vdlefq', this);
     var featuresQuery = this.model.get('featuresQuery');
 
     // Assemble query request.
@@ -144,6 +151,7 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
 
   var vectorDataLayerInitializeLayer = function(){
     console.log("vdlil");
+    this.updatePropertiesQuery();
     var deferred = $.Deferred();
     var fDeferred = this.getFeatures();
     fDeferred.done(_.bind(function(){
@@ -180,13 +188,11 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
       }
     };
     layer.model.on('change:disabled', function(){
-      console.log('change:disabled');
       layer.model.onDisabledChange();
     }, layer.model);
   };
 
   layerDecorators['VectorData'] = function(layer, opts){
-    console.log("decorate VectorData Layer");
     layerDecorators['default'](layer, opts);
 
     // Initialize query.
@@ -241,7 +247,6 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
   }
 
   var decorateLayer = function(layer, opts){
-    console.log('decorateLayer', arguments);
     var decorator = layer.model.get('decorator');
     if (decorator){
       if (typeof decorator == 'string'){
@@ -271,22 +276,18 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
   var layerConnectors = {};
   layerConnectors['default'] = {
     connect: function(layer, opts){
-      console.log('connectDefault');
     },
     disconnect: function(layer, opts){
-      console.log("disconnectDefault");
     }
   };
 
   layerConnectors['georefine_data'] = {
     connect: function(layer, opts){
-      console.log("connectDataLayer");
       layer.model.on('change:primary_filters change:base_filters', layer.updatePropertiesQuery, layer);
       layer.model.on('change:propertiesQuery', layer.getProperties, layer);
       layer.updatePropertiesQuery();
     },
     disconnect: function(layer, opts){
-      console.log("disconnectDataLayer");
       layer.model.off(null, layer.updatePropertiesQuery);
       layer.model.off(null, layer.getProperties);
     }
@@ -310,12 +311,10 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
   };
 
   var connectLayer = function(layer, opts){
-    console.log('connectLayer');
     getLayerConnector(layer, true)(layer, opts);
   };
 
   var disconnectLayer = function(layer, opts){
-    console.log('disconnectLayer');
     getLayerConnector(layer, false)(layer, opts);
   };
 
