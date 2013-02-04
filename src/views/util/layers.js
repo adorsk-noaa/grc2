@@ -113,7 +113,7 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
 
     queryDeferred.fail(function(){
       console.log('fail');
-      deferred.reject();
+      deferred.reject(arguments);
     });
 
     return deferred;
@@ -142,8 +142,21 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
 
   var vectorDataLayerInitializeLayer = function(){
     console.log("vdlil");
-    var featuresDeferred = this.getFeatures();
-    return featuresDeferred;
+    var deferred = $.Deferred();
+    var fDeferred = this.getFeatures();
+    fDeferred.done(_.bind(function(){
+      var pDeferred = this.getProperties();
+      pDeferred.done(function(){
+        deferred.resolve();
+      });
+      pDeferred.fail(function(){
+        deferred.reject(arguments);
+      });
+    }, this));
+    fDeferred.fail(function(){
+      deferred.reject(arguments);
+    });
+    return deferred;
   }
 
   /*

@@ -211,7 +211,9 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
           $launcher.on('click', _.bind(function(){
             dvModelCopy = SerializationUtil.copy(dvModel);
             var fdvCollection = this.model.get('floating_data_views');
-            fdvCollection.add(dvModelCopy);
+            fdvCollection.add(new Backbone.Model({
+              dataView: dvModelCopy,
+            }));
           }, this));
 
           $launchersList.append($launcher);
