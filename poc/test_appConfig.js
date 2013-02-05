@@ -15,7 +15,10 @@ GeoRefine.app = {
   WMSLayerEndpoint: geoRefineBaseUrl + '/projects/' + projectId + 'layer',
   colorBarEndpoint: geoRefineBaseUrl + '/projects/colorbar/',
   dataLayerEndpoint: geoRefineBaseUrl + '/projects/get_map/' + projectId + '/',
-  keyedStringsEndpoint: geoRefineBaseUrl + '/ks'
+  keyedStringsEndpoint: geoRefineBaseUrl + '/ks',
+  tokens: {
+    PROJECT_STATIC_DIR: 'http://localhost:8000/georefine/static/projects/project_' + projectId + '/static',
+  },
 };
 
 
@@ -78,10 +81,13 @@ GeoRefine.initialize = function($, Backbone, _, _s){
     var tableColExpression = '__' + opts.table + '__' + idId;
     var idColExpression = '__' + field.id + '__id';
     var labelColExpression = '__' + field.id + '__label';
+    var infoLink = "{{PROJECT_STATIC_DIR}}/sasipedia/index.html#" + field.sasipediaId + '/index.html' || field.infoLink;
+    var infoContent = _s.sprintf(
+      '%s Click <a href="%s" target="_blank">here</a> for more information.',
+      field.infoText, infoLink);
 
     $.extend(true, modelOpts, {
-      info: 'da info',
-      info_link: "{{PROJECT_STATIC_DIR}}/sasipedia#" + field.sasipediaId + "/index.html",
+      info: infoContent,
       inner_query: {
         SELECT: [
           {EXPRESSION: tableColExpression, ID: idId}
@@ -494,31 +500,31 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         {
         id: 'substrate',
         sasipediaId: 'substrates',
-        info: 'substrates info',
+        infoText: 'substrates info',
         label: "Substrates",
       },
       {
         id: 'energy',
         sasipediaId: 'energies',
-        info: 'energy info',
+        infoText: 'energy info',
         label: "Energies",
       },
       {
         id: 'feature',
         sasipediaId: 'features',
-        info: 'feature info',
+        infoText: 'feature info',
         label: "Features",
       },
       {
         id: 'feature_category',
         sasipediaId: 'feature_categories',
-        info: 'feature category info',
+        infoText: 'feature category info',
         label: "Feature Categories",
       },
       {
         id: 'gear',
         sasipediaId: 'gears',
-        info: 'gear info',
+        infoText: 'gear info',
         label: "Gear",
       },
       ]
@@ -562,7 +568,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
         {
         id: 'gear',
         sasipediaId: 'gears',
-        info: 'gear info',
+        infoText: 'gear info',
         label: "Gear",
       },
       ],
