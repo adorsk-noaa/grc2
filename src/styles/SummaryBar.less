@@ -3,58 +3,74 @@
 .summary-bar {
   > .inner {
     .rounded_corners(@padding_normal);
-    margin: 0 5px; 
-    padding: 5px 5px;
+    margin-bottom: @padding_normal; 
+    padding: @padding_normal;
 
-    .count-image{
-      width: 100%;
+    > * {
+      margin-bottom: @padding_normal;
+    }
 
-      .scalebar-container{
-        border: thin solid @light_grey;
-        display: block;
-        height: 1em;
+    .text {
+      .selected{
+        font-weight: bold;
+      }
+    }
+
+    .icon {
+      .count-image{
         width: 100%;
-        position: relative;
 
-        .scalebar-fill{
-          position: absolute;
-          height: 100%;
-          background-color: @chrome_primary;
+        .scalebar-container{
+          border: thin solid @light_grey;
+          display: block;
+          height: 1em;
+          width: 100%;
+          position: relative;
 
-          &.negative {
-            background-color: #ffbacb;
+          .scalebar-fill{
+            position: absolute;
+            height: 100%;
+            background-color: @chrome_primary;
+
+            &.negative {
+              background-color: #ffbacb;
+            }
+            &.total {
+              z-index: 1;
+              opacity: .5;
+            }
+            &.selected {
+              z-index: 2;
+            }
+
           }
-          &.total {
-            z-index: 1;
-            opacity: .5;
-          }
-          &.selected {
-            z-index: 2;
-          }
 
-        }
-
-        .mid-line {
-          display: none;
-          position: absolute;
-          left: 49.5%;
-          width: 1%;
-          background-color: #999;
-        }
-
-        &.diverging{
           .mid-line {
-            display: block;
+            display: none;
+            position: absolute;
+            left: 49.5%;
+            width: 1%;
+            background-color: #999;
+          }
+
+          &.diverging{
+            .mid-line {
+              display: block;
+            }
           }
         }
       }
     }
 
-    .text {
-      margin-bottom: @padding_normal;
+    .active-filters {
+      > h4 {
+      }
 
-      .selected{
-        font-weight: bold;
+      > ul {
+        margin-top: @padding_normal;
+        margin-left: 20px;
+        list-style: square;
+        font-size: 85%;
       }
     }
 

@@ -22,13 +22,14 @@ function($, Backbone, _, _s, ui, Util, template, FiltersUtil){
       this.initialRender();
 
       this.model.on('change:data', this.onDataChange, this);
-      this.model.on('change:primary_filters change:base_filters', this.onFiltersChange, this);
+      this.model.on('change:primary_filters change:base_filters', this.updateActiveFilters, this);
       this.on('ready', this.onReady, this);
     },
 
     initialRender: function(){
       $(this.el).html(_.template(template));
-      this.$filters = $('.filters', this.el);
+      this.$activeFilters = $('.active-filters', this.el);
+      this.updateActiveFilters();
     },
 
     onDataChange: function(){
@@ -79,19 +80,23 @@ function($, Backbone, _, _s, ui, Util, template, FiltersUtil){
 
     },
 
-    onFiltersChange: function(){
-      this.$filters.empty();
+    updateActiveFilters: function(){
+      this.$activeFilters.empty();
       var combinedFilters = [];
       _.each(['base', 'primary'], function(category){
         var filterGroups = this.model.get(category + '_filters');
         combinedFilters.push.apply(
           combinedFilters, FiltersUtil.filterObjectGroupsToArray(filterGroups) || []);
       }, this);
-      _.each(combinedFilters, function(f){
-        if (f.repr){
-          this.$filters.append('<li>' + f.repr + '</li>')
-        }
-      }, this);
+      if (combinedFilters.length > 0){
+        this.$activeFilters.append($('<h4>Active Filters:</h4>'));
+        var $filtersList = $('<ul></ul>').appendTo(this.$activeFilters);
+        _.each(combinedFilters, function(f){
+          if (f.repr){
+            $filtersList.append('<li>' + f.repr + '</li>');
+          }
+        }, this);
+      }
     },
 
     formatDivergingScalebar: function(opts){

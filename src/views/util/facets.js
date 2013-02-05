@@ -210,8 +210,9 @@ function(Backbone, _, _s, FacetCollectionView, FacetsEditorView, FunctionsUtil, 
         var val = parseFloat(selection[minmax]);
         if (! isNaN(val)){
           var op = (minmax == 'min') ? '>=' : '<=';
+          var opRepr = (minmax == 'min') ? '&ge;' : '&le;';
           formatted_filters.push({
-            repr:_s.sprintf('STUB!! %s %s', op, val),
+            repr:_s.sprintf('STUB!! %s %s', opRepr, val),
             where_clause: [filter_entity, op, val],
           });
         }
@@ -286,7 +287,7 @@ function(Backbone, _, _s, FacetCollectionView, FacetsEditorView, FunctionsUtil, 
     timeSliderFacet.formatFilters = function(selection){
       var _this = this;
       var formatted_filters = [{
-        repr: _s.sprintf('%s == %s', _this.model.get('label'), selection),
+        repr: _s.sprintf('%s = %s', _this.model.get('label'), selection),
         where_clause: [_this.model.get('filter_entity'), '==', selection],
       }];
       return formatted_filters;
@@ -348,13 +349,12 @@ function(Backbone, _, _s, FacetCollectionView, FacetsEditorView, FunctionsUtil, 
       // 'this' is a listFacetView.
       var formatted_filters = [];
       if (selection.length > 0){
-        var selectionRepr = _.map(selection, function(s){
-          '"' + s + '"';
-        }).join();
+        var selectionRepr = _.map(selection, function(s){return '"' + s.label + '"'; }).join();
+        var selectionIds = _.map(selection, function(s){return s.id});
 
         formatted_filters.push({
-          repr: _s.sprintf('%s in %s', _this.model.get('label'), selectionRepr),
-          where_clause: [this.model.get('filter_entity'), 'in', selection],
+          repr: _s.sprintf('%s in %s', this.model.get('label'), selectionRepr),
+          where_clause: [this.model.get('filter_entity'), 'in', selectionIds],
         });
       }
       return formatted_filters;
