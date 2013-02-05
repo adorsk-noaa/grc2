@@ -50,6 +50,8 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     initialRender: function(){
       $(this.el).html(_.template(DataViewTemplate, {}));
+      this.$title = $('> .dataview-title', this.el);
+      this.$title.html(this.model.get('label'));
       this.$table = $('> table', this.el);
       this.$table.tabble({
         stretchTable: true
