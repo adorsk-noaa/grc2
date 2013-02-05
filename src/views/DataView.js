@@ -6,13 +6,12 @@ define([
        './util/facets',
        './util/filters',
        './util/summaryBar',
-       './util/state',
        './util/map',
        'text!./templates/DataView.html',
        'Util',
        'tabble',
 ],
-function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, StateUtil, MapUtil, DataViewTemplate, Util, Tabble){
+function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, MapUtil, DataViewTemplate, Util, Tabble){
 
   var hookModules = [FacetsUtil, FiltersUtil, SummaryBarUtil, MapUtil];
 

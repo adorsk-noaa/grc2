@@ -1,5 +1,7 @@
 define([
+       'backbone',
        'underscore',
+       '_s',
        'Facets/views/facet_collection',
        'Facets/views/facetsEditor',
        './functions',
@@ -7,7 +9,7 @@ define([
        './requests',
        './format'
 ],
-function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, RequestsUtil, FormatUtil){
+function(Backbone, _, _s, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, RequestsUtil, FormatUtil){
 
   var createFacetsEditor = function(opts){
     var facetsEditorModel = opts.model || new Backbone.Model();
@@ -208,7 +210,10 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
         var val = parseFloat(selection[minmax]);
         if (! isNaN(val)){
           var op = (minmax == 'min') ? '>=' : '<=';
-          formatted_filters.push([filter_entity, op, val]);
+          formatted_filters.push({
+            repr:_s.sprintf('STUB!! %s %s', op, val),
+            where_clause: [filter_entity, op, val],
+          });
         }
       });
       return formatted_filters;
@@ -280,9 +285,10 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
     // Define formatFilters function for the view.
     timeSliderFacet.formatFilters = function(selection){
       var _this = this;
-      var formatted_filters = [
-        [_this.model.get('filter_entity'), '==', selection]
-      ];
+      var formatted_filters = [{
+        repr: _s.sprintf('%s == %s', _this.model.get('label'), selection),
+        where_clause: [_this.model.get('filter_entity'), '==', selection],
+      }];
       return formatted_filters;
     };
   };
@@ -342,9 +348,14 @@ function(_, FacetCollectionView, FacetsEditorView, FunctionsUtil, FiltersUtil, R
       // 'this' is a listFacetView.
       var formatted_filters = [];
       if (selection.length > 0){
-        formatted_filters = [
-          [this.model.get('filter_entity'), 'in', selection]
-        ];
+        var selectionRepr = _.map(selection, function(s){
+          '"' + s + '"';
+        }).join();
+
+        formatted_filters.push({
+          repr: _s.sprintf('%s in %s', _this.model.get('label'), selectionRepr),
+          where_clause: [this.model.get('filter_entity'), 'in', selection],
+        });
       }
       return formatted_filters;
     };

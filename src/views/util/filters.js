@@ -51,7 +51,7 @@ function($, Backbone, _, _s, Util){
     var combined_filters = [];
     _.each(filters_hash, function(filter_obj){
       if (filter_obj.filters){
-        combined_filters = combined_filters.concat(filter_obj.filters);
+        combined_filters.push.apply(combined_filters, filter_obj.filters);
       }
     });
 
@@ -78,43 +78,12 @@ function($, Backbone, _, _s, Util){
     model.set(setObj, opts);
   };
 
-  // Define alterState hook for saving filterGroup state.
-  var filterGroups_alterState = function(state, opts){
-    // Save filter group ids.
-    state.filterGroups = state.filterGroups || {};
-    _.each(opts.filterGroups, function(filterGroup, id){
-      state.filterGroups[id] = serializationUtil.serialize(filterGroup, state.serializationRegistry);
-    });
-  };
-
-  // Define deserializeConfigState hook for filter groups.
-  var deserializeConfigState = function(configState, state){
-    if (! configState.filterGroups){
-      return;
-    }
-
-    // Create collections for filter groups.
-    var filterGroups = {};
-
-    _.each(configState.filterGroups, function(filterGroupDef){
-      var filterGroup = new Backbone.Collection();
-      filterGroups[filterGroupDef.id] = filterGroup;
-    });
-
-    // Add to state.
-    state.filterGroups = filterGroups;
-  };
-
   // Objects to expose.
-  var filtersUtil = {
+  var exports = {
     decorateFilterGroup: decorateFilterGroup,
     filterObjectGroupsToArray: filterObjectGroupsToArray,
     getModelFilters: getModelFilters,
     updateModelFilters: updateModelFilters,
-    alterStateHooks : [
-      filterGroups_alterState
-    ],
-    deserializeConfigState: deserializeConfigState
   };
-  return filtersUtil;
+  return exports;
 });

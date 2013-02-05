@@ -6,9 +6,10 @@ define(
     "_s",
     "ui",
     "Util",
-    "text!./templates/SummaryBar.html"
+    "text!./templates/SummaryBar.html",
+    "./util/filters",
 ],
-function($, Backbone, _, _s, ui, Util, template){
+function($, Backbone, _, _s, ui, Util, template, FiltersUtil){
 
   var SummaryBarView = Backbone.View.extend({
 
@@ -20,15 +21,14 @@ function($, Backbone, _, _s, ui, Util, template){
 
       this.initialRender();
 
-      // Trigger update when model data changes.
       this.model.on('change:data', this.onDataChange, this);
-
-      // Listen for ready events.
+      this.model.on('change:primary_filters change:base_filters', this.onFiltersChange, this);
       this.on('ready', this.onReady, this);
     },
 
     initialRender: function(){
       $(this.el).html(_.template(template));
+      this.$filters = $('.filters', this.el);
     },
 
     onDataChange: function(){
@@ -77,8 +77,21 @@ function($, Backbone, _, _s, ui, Util, template){
         this.formatSequentialScalebar(scaleBarOpts);
       }
 
-      this.trigger('change:size');
+    },
 
+    onFiltersChange: function(){
+      this.$filters.empty();
+      var combinedFilters = [];
+      _.each(['base', 'primary'], function(category){
+        var filterGroups = this.model.get(category + '_filters');
+        combinedFilters.push.apply(
+          combinedFilters, FiltersUtil.filterObjectGroupsToArray(filterGroups) || []);
+      }, this);
+      _.each(combinedFilters, function(f){
+        if (f.repr){
+          this.$filters.append('<li>' + f.repr + '</li>')
+        }
+      }, this);
     },
 
     formatDivergingScalebar: function(opts){

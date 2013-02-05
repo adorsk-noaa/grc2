@@ -51,7 +51,7 @@ function(_, _s, Util, FiltersUtil){
       var filters = model.get(filter_attr);
       var filter_array = FiltersUtil.filterObjectGroupsToArray(filters);
       _.each(filter_array, function(f){
-        q['WHERE'].push(f);
+        q['WHERE'].push(f.where_clause);
       });
     }, this)
   };
