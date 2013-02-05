@@ -28,15 +28,19 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
     saveTestState: function(){
       console.log("sts", this.model);
+      var jsonState = this.getJsonState(null, 2);
+      console.log("slength", jsonState.length);
+      localStorage['testState'] = jsonState;
+    },
+
+    getJsonState: function(){
       var reg = {};
       var serializedModel = SerializationUtil.serialize(this.model, reg);
       var state = {
         model: serializedModel,
         registry: reg,
       };
-      var jsonState = JSON.stringify(state, null, 2);
-      console.log("slength", jsonState.length);
-      localStorage['testState'] = jsonState;
+      return JSON.stringify(state, arguments);
     },
 
     initialize: function(opts){
@@ -187,11 +191,89 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       this.$launchersTable = $('.launchers-table', this.$headerCell);
       this.$dvCell = $('.data-views-cell', this.el);
 
+      this.renderShareLauncher();
       this.renderDataViewLaunchers();
       this.resize();
 
       FloatingDataViewsUtil.setUpWindows(this);
       FloatingDataViewsUtil.setUpDataViews(this);
+    },
+
+    renderShareLauncher: function(){
+      var _this = this;
+      $shareLauncher = $('.share-launcher', this.el);
+      if (GeoRefine.config.noShareLauncher){
+        $shareLauncher.css({display: 'none'});
+        return;
+      }
+      var $slForm = $('<div><div class="description">Use the link below to share the current configuration.</div><input class="link" type="text"></div>');
+      $shareLauncher.qtip({
+        content: {
+          text: $slForm,
+        },
+        position: {
+          container: $(this.el),
+        },
+        show: {
+          event: 'click'
+        },
+        hide: {
+          fixed: true,
+          event: 'unfocus'
+        },
+        style: {
+          classes: 'share-link-form-tooltip',
+          tip: false
+        },
+        events: {
+          render: function(event, api){
+            // Toggle when target is clicked.
+            $(api.elements.target).on('click', function(clickEvent){
+              clickEvent.preventDefault();
+              api.toggle();
+            });
+          },
+
+          show: function(event, api){
+            // Get state.
+            var oldJsonState = _this.jsonState;
+            var newJsonState = _this.getJsonState();
+            if (oldJsonState == newJsonState){
+              return;
+            }
+            _this.jsonState = newJsonState;
+
+            // Set loading text.
+            var $linkInput = $('input.link', $slForm);
+            $linkInput.prop('disabled', true);
+            $linkInput.val('  loading...');
+            $linkInput.addClass('loading');
+            var deferred = $.ajax({
+              url: GeoRefine.app.keyedStringsEndpoint + '/getKey/',
+              type: 'POST',
+              data: {'s': _this.jsonState},
+            });
+
+            // When key request finishes...
+            deferred.then(function(data){
+              var shareLinkUrlTemplate = GeoRefine.config.shareLinkUrlTemplate;
+              if (! shareLinkUrlTemplate){
+                shareLinkUrlTemplate = window.location.origin + window.location.pathname + '#/stateKey={{STATE_KEY}}/';
+              }
+              // Assemble link url from the template.
+              var linkUrl = shareLinkUrlTemplate.replace('{{STATE_KEY}}', data.key);
+              // Fill in link url in the tooltip after a slight delay.
+              setTimeout(function(){
+                $linkInput.val(linkUrl);
+                $linkInput.prop('size', linkUrl.length);
+                $linkInput.removeClass('loading');
+                $linkInput.prop('disabled', false);
+              }, 1500);
+
+            });
+          }
+        }
+      });
     },
 
     renderDataViewLaunchers: function(){
