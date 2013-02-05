@@ -48,7 +48,7 @@ function($, Backbone, _, _s, Util){
 
       // For each model attribute + cid...
       _.each(_.extend(model.toJSON(), {cid: model.cid}), function(value, attr){
-        if (typeof value == 'object' && value._noSerialize){return;}
+        if (value instanceof Object && value._noSerialize){return;}
         serializedModel[attr] = serialize(value, registry);
       });
 
