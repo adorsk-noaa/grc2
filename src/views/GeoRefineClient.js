@@ -168,6 +168,11 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       $(window).resize(onWindowResize);
 
       this.trigger("ready");
+
+      _.each(GeoRefine.postInitializeHooks, function(hook){
+        hook($,Backbone,_, _s);
+      });
+
     },
 
     initialRender: function(){

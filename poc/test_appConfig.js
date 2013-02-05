@@ -18,6 +18,7 @@ GeoRefine.app = {
   keyedStringsEndpoint: geoRefineBaseUrl + '/ks'
 };
 
+
 GeoRefine.initialize = function($, Backbone, _, _s){
 
   /********
@@ -587,6 +588,58 @@ GeoRefine.initialize = function($, Backbone, _, _s){
   GeoRefine.config.floatingDataViews.defaults = {
     width: 800,
     height: 600,
+  };
+
+
+  // Setup loading message.
+  $(document).ready(function(){
+    $sasiOverlay = $('<div id="sasi-loading-overlay"></div>');
+    $sasiOverlay.css({
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      opacity: .85,
+      'background-color': '#fff',
+    });
+    $(document.body).append($sasiOverlay);
+    var $overlayDialog = $('<div></div>').appendTo($sasiOverlay);
+    $overlayDialog.css({
+      margin: '10% auto',
+      width: '80%',
+      border: 'medium solid #bcf',
+      'background-color': '#e3e9ff',
+      padding: '10px',
+    });
+    $sasiMessage = $('<div>Foo Mungos</div>').appendTo($overlayDialog);
+    $sasiMessage.css({
+      'margin-left': 'auto',
+      'margin-right': 'auto',
+      'text-align': 'center',
+    });
+    var $buttonContainer = $('<div style="width: 100%; text-align: center;"></div>').appendTo($overlayDialog);
+    $closeSasiOverlayButton = $('<button class="close-overlay" disabled="true">Ok, take me to the explorer</button>');
+    $closeSasiOverlayButton.appendTo($buttonContainer);
+    $closeSasiOverlayButton.on('click', function(){
+      $sasiOverlay.fadeOut('slow', function(){
+        $sasiOverlay.remove();
+      });
+    });
+    $loadingMsg = $('<div class="loading-msg">loading, please wait...</div>').appendTo($buttonContainer);
+  });
+
+  if (! GeoRefine.postInitializeHooks){
+    GeoRefine.postInitializeHooks = {};
+  }
+
+  GeoRefine.postInitializeHooks.sasiClient = function($, Backbone, _, _s){
+    console.log("sasiClient post initialize");
+    setTimeout(function(){
+      $loadingMsg.fadeOut('slow', function(){
+        $closeSasiOverlayButton.prop('disabled', false);
+      });
+    }, 2000);
   };
 
 };
