@@ -33,8 +33,9 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
       width: 485,
       height: 300
     };
-    ctx.floatingDataViews.container = $('.data-views-container', ctx.el);
-    ctx.floatingDataViews.constraint = $('.data-views-constraint', ctx.el);
+    ctx.floatingDataViews.$container = $('.data-views-container', ctx.el);
+    ctx.floatingDataViews.$constraint = $('.data-views-constraint', ctx.el);
+    ctx.floatingDataViews.$invitation = $('.data-views-invitation', ctx.el);
 
     // Create any initial data views.
     _.each(fdvCollection.models, function(fdvModel){
@@ -48,8 +49,20 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     fdvCollection.on('remove', function(fdvModel){
       removeFloatingDataView(ctx, {model: fdvModel});
     });
+
+    updateInvitation(ctx);
   };
 
+  var updateInvitation = function(ctx){
+    var fdvCollection = ctx.model.get('floating_data_views');
+    var $invitation = ctx.floatingDataViews.$invitation;
+    if (! fdvCollection || ! fdvCollection.length){
+      $invitation.fadeIn();
+    }
+    else{
+      $invitation.fadeOut();
+    }
+  };
 
   // View that combines DataView and Window models.
   var FloatingDataView = Backbone.View.extend({
@@ -104,7 +117,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     },
 
     renderWindow : function(){
-      var $dataViews = $(this.ctx.floatingDataViews.container);
+      var $dataViews = $(this.ctx.floatingDataViews.$container);
       var dvOffset = $dataViews.offset();
 
       this.window = new Windows.views.WindowView({
@@ -112,7 +125,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
         minimizable: false,
         maximizable: false,
         caller: $dataViews,
-        containment: $(this.ctx.floatingDataViews.constraint)
+        containment: $(this.ctx.floatingDataViews.$constraint)
       });
     },
 
@@ -133,6 +146,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
 
     remove: function(){
       this.trigger('remove');
+      this.model.collection.remove(this.model);
       this.dataView.trigger('remove');
       this.window.trigger('remove');
     }
@@ -159,12 +173,15 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
       floatingDataView.trigger('ready');
     }
 
+    updateInvitation(ctx);
+
     return floatingDataView;
 
   };
 
   var removeFloatingDataView = function(ctx, opts){
     delete ctx.subViews[opts.model.cid];
+    updateInvitation(ctx);
   };
 
   var initializeDataView = function(ctx, dataView){
@@ -178,8 +195,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
     opts = opts || {};
 
     // Get data views container offset.
-    $dataViews = $(ctx.floatingDataViewsContainer);
-    var dvOffset = $dataViews.offset();
+    var dvOffset = ctx.floatingDataViews.$container.offset();
 
     // Set default title.
     opts.title = opts.title || 'Window';

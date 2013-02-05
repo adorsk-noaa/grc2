@@ -43,6 +43,17 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       return JSON.stringify(state, arguments);
     },
 
+    deserializeJsonState: function(jsonState){
+      var serializedState = JSON.parse(jsonState);
+      var model = SerializationUtil.deserialize({
+        obj: serializedState.model,
+        serializedRegistry: serializedState.registry,
+      });
+      return {
+        model: model,
+      };
+    },
+
     initialize: function(opts){
       var _this = this;
       opts = opts || {};
@@ -76,26 +87,17 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       if (opts.stateKey){
         // Load the state from the server.
         $.ajax({
-          url: _this.config.keyedStringsEndpoint + '/getString/' + opts.stateKey,
+          url: GeoRefine.app.keyedStringsEndpoint + '/getString/' + opts.stateKey,
           type: 'GET',
           success: function(data){
-            var serializedState = JSON.parse(data.s);
-            _this.state = _this.deserializeState(serializedState);
+            _this.state = _this.deserializeJsonState(data.s);
             stateDeferred.resolve();
           }
         });
       }
       else if (opts.testState) {
         try {
-          var serializedState = JSON.parse(localStorage['testState']);
-          console.log("ss: ", serializedState);
-          var model = SerializationUtil.deserialize({
-            obj: serializedState.model,
-            serializedRegistry: serializedState.registry,
-          });
-          _this.state = {
-            model: model,
-          };
+          _this.state = _this.deserializeJsonState(localStorage['testState']);
           console.log("ds: ", _this.state);
           stateDeferred.resolve();
         }
