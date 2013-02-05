@@ -69,7 +69,12 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
 
     initialize: function(opts){
       this.ctx = opts.ctx;
-      this.opts = opts;
+      this.opts = {};
+      $.extend(true, this.opts, {
+        window: {
+          title: this.model.get('dataView').get('label'),
+        }
+      }, opts);
 
       if (! this.model.get('window')){
         this.model.set('window', createDefaultWindowModel(this.ctx, this.opts.window));
