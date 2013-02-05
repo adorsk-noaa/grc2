@@ -34,7 +34,7 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
       height: 300
     };
     ctx.floatingDataViews.$container = $('.data-views-container', ctx.el);
-    ctx.floatingDataViews.$constraint = $('.data-views-constraint', ctx.el);
+    ctx.floatingDataViews.$constraint = $('.data-views-container', ctx.el);
     ctx.floatingDataViews.$invitation = $('.data-views-invitation', ctx.el);
 
     // Create any initial data views.

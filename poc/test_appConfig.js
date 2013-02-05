@@ -382,6 +382,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       id: 'time',
       label: 'Time',
       noClose: true,
+      noMenu: true,
       primary_filter_groups: ['scenario'],
       type: 'timeSlider',
       value_type: 'numeric',
@@ -591,6 +592,7 @@ GeoRefine.initialize = function($, Backbone, _, _s){
   };
 
 
+  /*
   // Setup loading message.
   $(document).ready(function(){
     $sasiOverlay = $('<div id="sasi-loading-overlay"></div>');
@@ -641,5 +643,6 @@ GeoRefine.initialize = function($, Backbone, _, _s){
       });
     }, 2000);
   };
+  */
 
 };
