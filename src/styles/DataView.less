@@ -33,22 +33,24 @@
     text-align: center;
   }
 
+  .dataview-right-table {
+    height: 100%;
+    width: 100%;
+    > tbody > tr:first-child {
+      height: 0;
+    }
+
+    > tbody > tr > td {
+      padding: @padding_normal;
+    }
+  }
+
   .summary-bar-cell {
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    height: 5em;
-    padding: 10px;
+    height: 0;
   }
 
   .map-editor-cell {
-    position: absolute;
-    top: 5em;
-    right: 0;
-    left: 0;
-    bottom: 0;
-    padding: 10px;
+    height: auto;
   }
 
   .facets-header {
@@ -63,5 +65,6 @@
   .map-editor {
     height: 100%;
     width: 100%;
+    min-width: 240px;
   }
 }
