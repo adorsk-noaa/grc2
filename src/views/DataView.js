@@ -10,8 +10,9 @@ define([
        'text!./templates/DataView.html',
        'Util',
        'tabble',
+       'qtip',
 ],
-function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, MapUtil, DataViewTemplate, Util, Tabble){
+function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, SummaryBarUtil, MapUtil, DataViewTemplate, Util, Tabble, qtip){
 
   var hookModules = [FacetsUtil, FiltersUtil, SummaryBarUtil, MapUtil];
 
@@ -26,6 +27,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
       this.initialRender();
 
+      this.setupInfoTips();
       this.initializeFilterGroups();
       this.initializeWidgets();
 
@@ -160,8 +162,48 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
           _.extend(_this.actionHandlers, module.actionHandlers);
         }
       }, _this);
-    }
+    },
 
+    setupInfoTips: function(opts){
+      var _this = this;
+      opts = opts || {};
+      opts.el = opts.el || this.el;
+      opts.selector = opts.selector || '.info-button';
+      $(opts.el).on('click', opts.selector, function(event) {
+        $(this).qtip({
+          overwrite: false,
+          content: {
+            text: $('> .content', this).clone()
+          },
+          position: {
+            my: 'left center',
+            at: 'right center',
+            container: $(_this.el),
+          },
+          show: {
+            event: 'click',
+          },
+          hide: {
+            fixed: true,
+            event: 'unfocus'
+          },
+          style: {
+            classes: 'info-tip',
+            tip: false
+          },
+          events: {
+            render: function(event, api){
+              // Toggle when target is clicked.
+              $(api.elements.target).on('click', function(clickEvent){
+                clickEvent.preventDefault();
+                api.toggle();
+              });
+            },
+          },
+        });
+        $(this).qtip('show')
+      });
+    },
 
   });
 
