@@ -13,6 +13,7 @@
 @import "SummaryBar.less";
 
 .dataview{
+  position: relative;
   padding: 5px 5px 10px 5px;
   display: inline-block;
   > table {
@@ -63,8 +64,40 @@
   }
 
   .map-editor {
+    z-index: 0; // For stackign qtip correctly under overlay.
     height: 100%;
     width: 100%;
     min-width: 240px;
+  }
+
+  .dataview-loading-overlay {
+    display: none;
+    position: absolute;
+    z-index: 5;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ffffff;
+    opacity: .85;
+
+    .loading-icon {
+      .rounded_corners;
+      margin-left: auto;
+      margin-right: auto;
+      margin-top: 10%;
+      width: 85%;
+      max-width: 200px;
+      height: 85%;
+      max-height: 200px;
+      background: url(images/loading-placeholder.gif) center center no-repeat; 
+      background-size: 100%;
+    }
+  }
+}
+
+.dataview.loading {
+  .dataview-loading-overlay {
+    display: block;
   }
 }

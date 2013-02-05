@@ -20,7 +20,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     initialize: function(opts){
       var _this = this;
 
-      $(this.el).addClass('dataview');
+      $(this.el).addClass('dataview loading');
 
       this.qField = this.model.get('qField');
 
@@ -103,7 +103,6 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
     },
 
     postInitialize: function(){
-      console.log("DataView.postInitialize");
       this.resize();
       this.resizeStop();
 
@@ -114,6 +113,9 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
       this.on('ready', this.onReady, this);
       this.trigger("ready");
+      $('.dataview-loading-overlay', this.el).fadeOut('slow', _.bind(function(){
+        $(this.el).removeClass('loading');
+      }, this));
     },
 
     resize: function(){
