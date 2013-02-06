@@ -17,10 +17,13 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
     GeoRefine = {};
   }
 
-  // Run initialize function if provided.
-  if (GeoRefine.initialize){
-    GeoRefine.initialize($, Backbone, _, _s);
-  }
+  // Run pre initializeHooks
+  var sortedHooks = _.sortBy(GeoRefine.preInitializeHooks, function(hook){
+    return hook.weight;
+  });
+  _.each(sortedHooks, function(hook){
+    hook.fn($, Backbone, _, _s);
+  });
 
   var GeoRefineClientView = Backbone.View.extend({
     events: {
