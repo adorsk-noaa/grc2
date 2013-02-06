@@ -7,9 +7,10 @@ define([
        './util/actions',
        './util/floatingDataViews',
        './util/serialization',
+       './util/format',
        'qtip',
 ],
-function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUtil, SerializationUtil, qtip){
+function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataViewsUtil, SerializationUtil, FormatUtil, qtip){
 
   // Setup GeoRefine singleton.
   if (! GeoRefine){
@@ -198,12 +199,65 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       this.$launchersTable = $('.launchers-table', this.$headerCell);
       this.$dvCell = $('.data-views-cell', this.el);
 
-      this.renderShareLauncher();
+      this.renderInfoLauncher();
       this.renderDataViewLaunchers();
+      this.renderShareLauncher();
       this.resize();
 
       FloatingDataViewsUtil.setUpWindows(this);
       FloatingDataViewsUtil.setUpDataViews(this);
+    },
+
+    renderInfoLauncher: function(){
+      if (GeoRefine.config.projectInfo){
+        var projectInfo = GeoRefine.config.projectInfo;
+        var $container = $('<div class="info-launcher-container"></div>').prependTo(this.$headerCell);
+        var $launcher = $('<a class="info-launcher"</a>').appendTo($container);
+        var label = projectInfo.label || 'info';
+        var formattedLabel = FormatUtil.GeoRefineTokenFormatter(label);
+        $launcher.html(formattedLabel);
+
+        var launcherHref = 'javascript:{}';
+        if (projectInfo.infoLink){
+          $launcher.attr('href', FormatUtil.GeoRefineTokenFormatter(projectInfo.infoLink));
+          $launcher.attr('target', '_blank');
+        }
+        else{
+          $launcher.attr('href', 'javascript:{}');
+          var $content =  $('<div class="content" style="display: none"></div>').appendTo($launcher);
+          var content = projectInfo.content || '';
+          var formattedContent = FormatUtil.GeoRefineTokenFormatter(content);
+          $content.html(formattedContent);
+
+          $launcher.qtip({
+            content: {
+              text: $content,
+            },
+            position: {
+              container: $(this.el),
+            },
+            show: {
+              event: 'click'
+            },
+            hide: {
+              fixed: true,
+              event: 'unfocus'
+            },
+            style: {
+              classes: 'project-info-tooltip info-tip',
+              tip: false
+            },
+            events: {
+              render: function(event, api){
+                $(api.elements.target).on('click', function(clickEvent){
+                  clickEvent.preventDefault();
+                  api.toggle();
+                });
+              },
+            }
+          });
+        }
+      }
     },
 
     renderShareLauncher: function(){
@@ -292,45 +346,6 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
         var $groupLabelCell = $('<td class="label"></td>');
         var $groupLabel = $('<h3>' + dvGroup.label + ': </h3>').appendTo($groupLabelCell);
         $groupLabelCell.appendTo($groupRow);
-
-        if (dvGroup.info){
-          var $infoLink = $('<a class="info-button" href="javascript:{}">info<div class="content">' + dvGroup.info + '</div></a>');
-          $infoLink.appendTo($groupLabelCell);
-          $infoLink.on('click', function(event) {
-            $(this).qtip({
-              overwrite: false,
-              content: {
-                text: $('> .content', this).clone()
-              },
-              position: {
-                my: 'left center',
-                at: 'right center',
-                container: $(_this.el),
-              },
-              show: {
-                event: 'click',
-                ready: true,
-              },
-              hide: {
-                fixed: true,
-                event: 'unfocus'
-              },
-              style: {
-                classes: 'info-tip',
-                tip: false
-              },
-              events: {
-                render: function(event, api){
-                  // Toggle when target is clicked.
-                  $(api.elements.target).on('click', function(clickEvent){
-                    clickEvent.preventDefault();
-                    api.toggle();
-                  });
-                },
-              },
-            });
-          });
-        }
 
         var $launchersCell = $('<td class="launchers"></td>').appendTo($groupRow);
         var $launchersList = $('<ul></ul>').appendTo($launchersCell);

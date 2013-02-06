@@ -583,15 +583,18 @@ GeoRefine.initialize = function($, Backbone, _, _s){
   GeoRefine.config.dataViewGroups = [
     {
     label: 'SASI Results',
-    info: 'SASI Results info',
     models: generateResultsConfigs(),
   },
     {
     label: 'Fishing Efforts',
-    info: 'Fishing efforts info',
     models: generateFishingEffortsConfigs(),
   },
   ];
+
+  GeoRefine.config.projectInfo = {
+    label: 'Info',
+    infoLink: '{{PROJECT_STATIC_DIR}}/sasipedia/index.html',
+  };
 
   GeoRefine.config.floatingDataViews = {};
   GeoRefine.config.floatingDataViews.defaults = {
