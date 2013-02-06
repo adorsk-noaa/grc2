@@ -583,10 +583,12 @@ GeoRefine.initialize = function($, Backbone, _, _s){
   GeoRefine.config.dataViewGroups = [
     {
     label: 'SASI Results',
+    info: 'SASI Results info',
     models: generateResultsConfigs(),
   },
     {
     label: 'Fishing Efforts',
+    info: 'Fishing efforts info',
     models: generateFishingEffortsConfigs(),
   },
   ];

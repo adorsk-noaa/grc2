@@ -284,12 +284,53 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
     },
 
     renderDataViewLaunchers: function(){
+      var _this = this;
       _.each(GeoRefine.config.dataViewGroups, function(dvGroup){
         var $groupRow = $('<tr class="launchers-group"></tr>');
         this.$launchersTable.append($groupRow);
 
-        var $groupLabel = $('<td class="label"><h3>' + dvGroup.label + ': </h3></td>');
-        $groupRow.append($groupLabel);
+        var $groupLabelCell = $('<td class="label"></td>');
+        var $groupLabel = $('<h3>' + dvGroup.label + ': </h3>').appendTo($groupLabelCell);
+        $groupLabelCell.appendTo($groupRow);
+
+        if (dvGroup.info){
+          var $infoLink = $('<a class="info-button" href="javascript:{}">info<div class="content">' + dvGroup.info + '</div></a>');
+          $infoLink.appendTo($groupLabelCell);
+          $infoLink.on('click', function(event) {
+            $(this).qtip({
+              overwrite: false,
+              content: {
+                text: $('> .content', this).clone()
+              },
+              position: {
+                my: 'left center',
+                at: 'right center',
+                container: $(_this.el),
+              },
+              show: {
+                event: 'click',
+                ready: true,
+              },
+              hide: {
+                fixed: true,
+                event: 'unfocus'
+              },
+              style: {
+                classes: 'info-tip',
+                tip: false
+              },
+              events: {
+                render: function(event, api){
+                  // Toggle when target is clicked.
+                  $(api.elements.target).on('click', function(clickEvent){
+                    clickEvent.preventDefault();
+                    api.toggle();
+                  });
+                },
+              },
+            });
+          });
+        }
 
         var $launchersCell = $('<td class="launchers"></td>').appendTo($groupRow);
         var $launchersList = $('<ul></ul>').appendTo($launchersCell);
@@ -342,7 +383,7 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       var serializationRegistry = {};
       serializedModel = SerializationUtil.serialize(window.fdv.model, serializationRegistry);
       fdvModel = SerializationUtil.deserialize({
-        obj: serializedModel, 
+        obj: serializedModel,
         serializedRegistry: serializationRegistry,
       });
       FloatingDataViewsUtil.addFloatingDataView(this, {

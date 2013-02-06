@@ -96,11 +96,16 @@
   }
 
 
-  .info-tip.qtip{
-    border-width: 1px;
-    border-style: solid;
-    border-color: #999 #666 #666 #999;
-    background-color: white;
+  .info-tip{
+    &.qtip {
+      border-width: 1px;
+      border-style: solid;
+      border-color: #999 #666 #666 #999;
+      background-color: white;
+    }
+    > .content{
+      display: none;
+    }
   }
 }
 
