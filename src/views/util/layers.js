@@ -176,19 +176,17 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
   layerDecorators['default'] = function(layer, opts){
     // Set model to remove callbacks when remove is triggered.
     layer.model.on('remove', function(){ this.off(); }, layer.model);
-    // Set default onDisabledChange function for model and 
-    // connect to disabled events.
-    layer.model.onDisabledChange = function(){
-      layer.model.set('visible', ! layer.model.get('disabled'));
-      if (layer.model.get('disabled')){
+    // Set default visibility change function.
+    layer.onVisibilityChange = function(){
+      if (! layer.model.get('properties').get('visibility')){
         disconnectLayer(layer, opts);
       }
       else{
         connectLayer(layer, opts);
       }
     };
-    layer.model.on('change:disabled', function(){
-      layer.model.onDisabledChange();
+    layer.model.get('properties').on('change:visibility', function(){
+      layer.onVisibilityChange();
     }, layer.model);
   };
 

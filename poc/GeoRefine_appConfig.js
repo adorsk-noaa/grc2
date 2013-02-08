@@ -2,7 +2,19 @@
 
   var setUpSasiConfig = function($, Backbone, _, _s){
 
-    var baseLayers = {};
+    var baseLayers = {
+      Ocean: new Backbone.Model({
+        layer_type: 'XYZ',
+        label: 'foo',
+        url: 'http://services.arcgisonline.com/ArcGIS/rest/services/Ocean_Basemap/MapServer/tile/${z}/${y}/${x}',
+        disabled: false,
+        properties: new Backbone.Model({
+          isBaseLayer: true,
+          sphericalMercator: true,
+          resolutions: [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411],
+        })
+      }),
+    };
 
     var overlayLayers = {
       graticule: new Backbone.Model({
@@ -13,21 +25,14 @@
     };
 
     var defaultMap = new Backbone.Model({
-      maxExtent: [-180, -90, 180, 90],
-      extent: [-70, 30, -65, 50],
-      resolutions:[0.025,0.0125,0.00625,0.003125,0.0015625,0.00078125],
-      options: {
-        allOverlays: true
-      },
-      default_layer_options: {
-        transitionEffect:"resize",
-        tileSize: {w:1024, h:1024},
-        buffer:0
-      },
-      default_layer_attributes:{
-        disabled: true,
-        reorderable: true
-      },
+      properties: new Backbone.Model({
+        maxExtent: [-20037508.34, -20037508.34, 20037508.34, 20037508.34],
+        extent: [-7792364.354444444, 3503549.8430166757, -7235766.900555555, 6446275.8401198285],
+        resolutions: [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411],
+        allOverlays: true,
+        projection: 'EPSG:3857',
+        displayProjection: 'EPSG:4326',
+      }),
     });
 
     var cellsFeatureQuery = new Backbone.Model({
@@ -142,6 +147,10 @@
         layer_category: 'data',
         source: 'georefine_data',
         label: field.label + ', per unit cell area',
+        properties: new Backbone.Model({
+          projection: 'EPSG:3857',
+          preFeatureInsert: '(function(feature){feature.geometry.transform("EPSG:4326", "EPSG:3857")})'
+        }),
         disabled: false,
         expanded: true,
         base_filter_groups: ['scenario'],
@@ -413,7 +422,7 @@
           mapEditor: new Backbone.Model({
             map: defaultMap.clone(),
             base_layers: new Backbone.Collection(
-              //[baseLayers['world']]
+              [baseLayers['Ocean']]
             ) ,
             overlay_layers: new Backbone.Collection(
               [
