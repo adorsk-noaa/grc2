@@ -2,9 +2,9 @@
 
   var setUpSasiConfig = function($, Backbone, _, _s){
 
-    var allResolutions = [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411, 76.4370282850732, 38.2185141425366, 19.1092570712683, 9.55462853563415, 4.77731426794937, 2.38865713397468];
+    var resolutions = [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411, 76.4370282850732, 38.2185141425366, 19.1092570712683, 9.55462853563415, 4.77731426794937, 2.38865713397468];
 
-    var baseLayers = {
+    var layers = {
       Ocean: new Backbone.Model({
         layer_type: 'XYZ',
         label: 'foo',
@@ -14,15 +14,15 @@
           isBaseLayer: true,
           sphericalMercator: true,
           serverResolutions: [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411, 76.4370282850732, 38.2185141425366, 19.1092570712683, 9.55462853563415, 4.77731426794937, 2.38865713397468],
+          resolutions: resolutions.slice(0,11),
         })
       }),
-    };
-
-    var overlayLayers = {
       graticule: new Backbone.Model({
         layer_type:"Graticule",
         label:"Lat/Lon Grid",
         disabled: true,
+        properties: new Backbone.Model({
+        })
       }),
       habs: new Backbone.Model({
         layer_type: "WMS",
@@ -37,7 +37,7 @@
         },
         properties: new Backbone.Model({
           projection: 'EPSG:3857',
-          serverResolutions: allResolutions.slice(2,9),
+          serverResolutions: resolutions.slice(2,9),
           visibility: true,
           tileSize: new OpenLayers.Size(512, 512)
         }),
@@ -441,13 +441,11 @@
           }),
           mapEditor: new Backbone.Model({
             map: defaultMap.clone(),
-            base_layers: new Backbone.Collection(
-              [baseLayers['Ocean']]
-            ) ,
-            overlay_layers: new Backbone.Collection(
+            layers: new Backbone.Collection(
               [
                 dataLayers[field.id],
-                overlayLayers.graticule,
+                layers.graticule,
+                layers.Ocean
             ])
           }),
           initialActions: initialActions,
