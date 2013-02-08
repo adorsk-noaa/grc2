@@ -2,6 +2,8 @@
 
   var setUpSasiConfig = function($, Backbone, _, _s){
 
+    var allResolutions = [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411, 76.4370282850732, 38.2185141425366, 19.1092570712683, 9.55462853563415, 4.77731426794937, 2.38865713397468];
+
     var baseLayers = {
       Ocean: new Backbone.Model({
         layer_type: 'XYZ',
@@ -11,7 +13,7 @@
         properties: new Backbone.Model({
           isBaseLayer: true,
           sphericalMercator: true,
-          resolutions: [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411],
+          serverResolutions: [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411, 76.4370282850732, 38.2185141425366, 19.1092570712683, 9.55462853563415, 4.77731426794937, 2.38865713397468],
         })
       }),
     };
@@ -21,14 +23,32 @@
         layer_type:"Graticule",
         label:"Lat/Lon Grid",
         disabled: true,
-      })
+      }),
+      habs: new Backbone.Model({
+        layer_type: "WMS",
+        label:"habs",
+        url: 'http://localhost:8080/geoserver/topp/wms?',
+        disabled: false,
+        params: {
+          styles: 'habs',
+          layers: 'topp:habitats',
+          srs:'EPSG:3857',
+          transparent: true,
+        },
+        properties: new Backbone.Model({
+          projection: 'EPSG:3857',
+          serverResolutions: allResolutions.slice(2,9),
+          visibility: true,
+          tileSize: new OpenLayers.Size(512, 512)
+        }),
+      }),
     };
 
     var defaultMap = new Backbone.Model({
       properties: new Backbone.Model({
         maxExtent: [-20037508.34, -20037508.34, 20037508.34, 20037508.34],
         extent: [-7792364.354444444, 3503549.8430166757, -7235766.900555555, 6446275.8401198285],
-        resolutions: [156543.033928, 78271.5169639999, 39135.7584820001, 19567.8792409999, 9783.93962049996, 4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411],
+        resolutions: resolutions,
         allOverlays: true,
         projection: 'EPSG:3857',
         displayProjection: 'EPSG:4326',
