@@ -1,11 +1,12 @@
 define([
        'backbone',
        'underscore',
+       '_s',
        './filters',
        './requests',
        "MapView/models/Feature",
 ],
-function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
+function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
 
   /*
    * Define custom functions.
@@ -190,6 +191,12 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
     }, layer.model);
   };
 
+  layerDecorators['GeoRefine_WMS'] = function(layer, opts){
+    layerDecorators['default'](layer, opts);
+    var url = _s.sprintf("%s/%s/wms", GeoRefine.app.WMSLayerEndpoint, layer.model.id);
+    layer.model.set('url', url);
+  };
+
   layerDecorators['VectorData'] = function(layer, opts){
     layerDecorators['default'](layer, opts);
 
@@ -256,6 +263,9 @@ function(Backbone, _, FiltersUtil, RequestsUtil, FeatureModel){
       var type = layer.model.get('layer_type');
       if (src == 'georefine_data' && type == 'Vector'){
         decorator = layerDecorators['VectorData'];
+      }
+      else if (src == 'georefine_wms'){
+        decorator = layerDecorators['GeoRefine_WMS'];
       }
       else{
         decorator = layerDecorators['default'];

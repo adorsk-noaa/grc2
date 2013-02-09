@@ -375,11 +375,6 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       _.each(this.subViews, function(subView){
         subView.trigger('ready');
       }, this);
-
-      // TESTING
-      var dvModel = GeoRefine.config.dataViewGroups[0].models[0];
-      var fdvCollection = this.model.get('floating_data_views');
-      //fdvCollection.add(SerializationUtil.copy(dvModel));
     },
 
     resize: function(){
