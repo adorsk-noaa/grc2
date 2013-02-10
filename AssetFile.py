@@ -98,5 +98,9 @@ assets = {
     'tinycolor.js': {
         'type': 'url', 
         'source': 'https://raw.github.com/bgrins/TinyColor/master/dist/tinycolor-min.js'
+    },
+    'jReject': {
+        'type': 'git', 
+        'source': 'https://github.com/TurnWheel/jReject.git'
     }
 }

@@ -200,7 +200,7 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
 
       this.$headerCell = $('.header-cell', this.el);
       this.$launchersTable = $('.launchers-table', this.$headerCell);
-      this.$dvCell = $('.data-views-cell', this.el);
+      this.$dvContainer = $('.data-views-container', this.el);
 
       this.renderInfoLauncher();
       this.renderDataViewLaunchers();
@@ -380,7 +380,8 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
     resize: function(){
       var headerPos = this.$headerCell.position();
       var headerHeight = this.$headerCell.outerHeight(true);
-      this.$dvCell.css('top', headerPos.top + headerHeight);
+      this.$dvContainer.css('top', headerHeight);
+      $('.data-views-invitation', this.el).css('top', headerHeight + 40);
       _.each(this.subViews, function(subView){
         subView.trigger('resize');
       }, this);

@@ -24,7 +24,7 @@ function($, Backbone, _, _s, Util){
       // Replace tokens in a string.
       var tokenRe = new RegExp('({{(.*?)}})', 'g');
       var tokenized_str = str.replace(tokenRe, function(match, token, tokenId){
-        if (GeoRefine.app.tokens && GeoRefine.app.tokens[tokenId]){
+        if (GeoRefine.app && GeoRefine.app.tokens && GeoRefine.app.tokens[tokenId]){
           return GeoRefine.app.tokens[tokenId];
         }
         else{
