@@ -18,9 +18,12 @@
     position: relative;
 
     > .header-cell{
-      border-bottom: thin solid gray;
+      position: fixed;
       width: 100%;
+      border-bottom: thin solid gray;
       padding: 5px;
+      z-index: 5;
+      background-color: white;
     }
 
     .share-launcher {
@@ -43,6 +46,8 @@
 
     > .data-views-cell{
       position: absolute;
+      z-index: 3;
+      overflow: scroll;
       bottom: 0;
       left: 0;
       right: 0;
