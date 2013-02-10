@@ -106,6 +106,17 @@ function($, Backbone, _, _s, Util, Windows, serializationUtil, DataView){
 
       this.window.on("close", this.remove, this);
 
+      this.dataView.on('change:minDimensions', function(){
+        var minDims = {};
+        _.each(['Width', 'Height'], function(dim){
+          var dimAttr = 'min' + dim;
+          var val  = parseInt($(this.dataView.el).css(dimAttr));
+          if ($.isNumeric(val)){
+            this.window.w.getContainer().resizable('option', dimAttr, val);
+          }
+        }, this);
+      }, this);
+
       // Bump counter.
       this.ctx.floatingDataViews.counter += 1;
 

@@ -54,9 +54,22 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
       this.$title = $('> .dataview-title', this.el);
       this.$title.html(this.model.get('label'));
       this.$table = $('> table', this.el);
+      this.$fCell = $('.dataview-facets-cell', this.el);
+      this.$rtCell = $('.dataview-right-table-cell', this.el);
       this.$table.tabble({
-        stretchTable: true
+        stretchTable: true,
+        resize: _.bind(this.onTabbleResize, this),
       });
+    },
+
+    onTabbleResize: function(){
+      var minW = parseInt(this.$rtCell.css('min-width')) + this.$fCell.outerWidth(true);
+      var minH = parseInt(this.$table.css('min-height')) + this.$title.outerHeight(true);
+      $(this.el).css({
+        minWidth: minW,
+        minHeight: minH,
+      });
+      this.trigger('change:minDimensions');
     },
 
     initializeFilterGroups: function(){
@@ -143,6 +156,7 @@ function(Backbone, _, SummaryBarView, ActionsUtil, FacetsUtil, FiltersUtil, Summ
 
     onReady: function(){
       this.resize();
+      this.resizeStop();
       _.each(this.subViews, function(subView){
         subView.trigger('ready');
       }, this);

@@ -10,7 +10,7 @@
       label:"Lat/Lon Grid",
       disabled: true,
     },
-      {source: 'georefine_wms', 'id': 'substrates', "layer_type": "WMS", "info": "<ul style=\"margin: 0; padding: 0; list-style: none; text-align: center;\">\n    \n    <li style=\"display: inline-block;\">\n        <div style=\"display:inline-block; vertical-align: middle;\">Substrate 1</div>\n        <div style=\"width: 1em; height: 1em; display:inline-block; vertical-align: middle; background-color: #000000;\"></div>\n    </li>\n    \n    <li style=\"display: inline-block; margin-left: .5em;\">\n        <div style=\"display:inline-block; vertical-align: middle;\">Substrate 2</div>\n        <div style=\"width: 1em; height: 1em; display:inline-block; vertical-align: middle; background-color: #010101;\"></div>\n    </li>\n    \n</ul>", "label": "Substrates", "disabled": true, "params": {"layers": "substrates", "srs": "EPSG:3857", "transparent": true}, "properties": {"projection": "EPSG:3857"}},
+      {"layer_type": "WMS", "source": "georefine_wms", "properties": {tileSize: {w: 512, h: 512}, "serverResolutions": [4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558], "projection": "EPSG:3857", "maxExtent": [-55659.74539663616, -55660.4518654215, 278298.7269831836, 278387.0759542342]}, "info": "<ul style=\"margin: 0; padding: 0; list-style: none; text-align: center;\">\n    \n    <li style=\"display: inline-block;\">\n        <div style=\"display:inline-block; vertical-align: middle;\">Substrate 1</div>\n        <div style=\"width: 1em; height: 1em; display:inline-block; vertical-align: middle; background-color: #000000;\"></div>\n    </li>\n    \n    <li style=\"display: inline-block; margin-left: .5em;\">\n        <div style=\"display:inline-block; vertical-align: middle;\">Substrate 2</div>\n        <div style=\"width: 1em; height: 1em; display:inline-block; vertical-align: middle; background-color: #010101;\"></div>\n    </li>\n    \n</ul>", "params": {"layers": "substrates", "srs": "EPSG:3857", "transparent": true}, "disabled": true, "id": "substrates", "label": "Substrates"},
       ];
 
     var defaultLayerProperties = {
@@ -19,6 +19,7 @@
     var defaultMapProperties = {
       maxExtent: [-20037508.34, -20037508.34, 20037508.34, 20037508.34],
       extent: [-7792364.354444444, 3503549.8430166757, -7235766.900555555, 6446275.8401198285],
+      resolutions: [4891.96981024998, 2445.98490512499, 1222.99245256249, 611.49622628138, 305.748113140558, 152.874056570411],
       allOverlays: true,
       projection: 'EPSG:3857',
       displayProjection: 'EPSG:4326',
