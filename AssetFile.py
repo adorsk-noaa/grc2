@@ -54,7 +54,6 @@ assets = {
     'facets': {
         'type': 'git',
         'source': 'https://github.com/adorsk-noaa/bb_facets.git',
-        'refspec': 'noSummaryBar'
     },
     'jquery.ui.extras': {
         'type': 'git',
