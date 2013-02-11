@@ -1,4 +1,4 @@
-require(
+define(
   [
     "jquery",
     "rless!GeoRefineClient/styles/GeoRefineClient.less",

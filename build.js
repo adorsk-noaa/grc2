@@ -26,7 +26,7 @@ sandbox = {
 script.runInNewContext(sandbox);
 
 buildConfig = {
-  include: ['requireLib', 'GeoRefineClient/views/GeoRefineClient'],
+  include: ['requireLib', 'GeoRefineClient/app'],
   out: DIST_DIR + '/GeoRefineClient.min.js',
   optimize: 'uglify'
 };
