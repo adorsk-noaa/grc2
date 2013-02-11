@@ -12,8 +12,7 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
    * Define custom functions.
    */
   var vectorDataLayerGetProperties = function(){
-    console.log('vdlgp', this);
-    this.model.set('load:start');
+    this.trigger('load:start');
 
     var features = this.model.get('features');
 
@@ -37,19 +36,17 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
         }, this);
         featureModel.get('properties').set(newProperties);
       }, this);
-      this.model.set('load:end');
+      this.trigger('load:end');
     }, this));
 
     deferred.fail(function(){
-      console.log('fail');
-      this.model.set('load:end');
+      this.trigger('load:end');
     });
 
     return deferred;
   };
 
   var vectorDataLayerUpdatePropertiesQuery = function(){
-    console.log('vdlupq', this);
     var setObj = {};
     var query = this.model.get('propertiesQuery');
     _.each(['base', 'primary'], function(filterCategory){
@@ -66,7 +63,6 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
   };
 
   var vectorDataLayerExecutePropertiesQuery = function(){
-    console.log('vdledpq', this);
     var query = this.model.get('propertiesQuery');
     var qfield  = query.get('quantity_field');
     if (! qfield){
@@ -104,7 +100,7 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
   };
 
   var vectorDataLayerGetFeatures = function(){
-    this.model.set('load:start');
+    this.trigger('load:start');
     var features = this.model.get('features');
 
     var deferred = $.Deferred();
@@ -122,13 +118,12 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
 
         features.add(featureModel);
       });
-      this.model.set('load:end');
+      this.trigger('load:end');
       deferred.resolve();
     }, this));
 
     queryDeferred.fail(function(){
-      console.log('fail');
-      this.model.set('load:end');
+      this.trigger('load:end');
       deferred.reject(arguments);
     });
 
@@ -136,7 +131,6 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
   };
 
   var vectorDataLayerExecuteFeaturesQuery = function(){
-    console.log('vdlefq', this);
     var featuresQuery = this.model.get('featuresQuery');
 
     // Assemble query request.
@@ -157,7 +151,6 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
   };
 
   var vectorDataLayerInitializeLayer = function(){
-    console.log("vdlil");
     this.updatePropertiesQuery();
     var deferred = $.Deferred();
     var fDeferred = this.getFeatures();
