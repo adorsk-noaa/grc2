@@ -76,9 +76,18 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
       // Parse url hash for options.
       var hash = window.location.hash;
 
+      // Parse shareLinkUrlTemplate.
+      var shareMatch;
+      if (shareMatch = new RegExp('/shareLinkUrlTemplate=(.*?)/').exec(hash)){
+        opts.shareLinkUrlTemplate = decodeURIComponent(shareMatch[1]);
+      }
+      if (opts.shareLinkUrlTemplate){
+        GeoRefine.config.shareLinkUrlTemplate = opts.shareLinkUrlTemplate;
+      }
+
       // Parse state key.
-      if (keyMatch = new RegExp('stateKey=(.*)').exec(hash)){
-        opts.stateKey = keyMatch[1];
+      if (keyMatch = new RegExp('/stateKey=(.*?)/').exec(hash)){
+        opts.stateKey = decodeURIComponent(keyMatch[1]);
       }
       if (new RegExp('testState').exec(hash)){
         opts.testState = true;
@@ -131,7 +140,6 @@ function($, Backbone, _, _s, GeoRefineClientTemplate, ActionsUtil, FloatingDataV
     },
 
     afterLoadState: function(){
-      console.log('after load state');
       this.model = this.state.model || new Backbone.Model();
 
       if (! this.model.get('floating_data_views')){
