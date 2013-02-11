@@ -13,6 +13,7 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
    */
   var vectorDataLayerGetProperties = function(){
     console.log('vdlgp', this);
+    this.model.set('load:start');
 
     var features = this.model.get('features');
 
@@ -36,10 +37,12 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
         }, this);
         featureModel.get('properties').set(newProperties);
       }, this);
+      this.model.set('load:end');
     }, this));
 
     deferred.fail(function(){
       console.log('fail');
+      this.model.set('load:end');
     });
 
     return deferred;
@@ -101,6 +104,7 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
   };
 
   var vectorDataLayerGetFeatures = function(){
+    this.model.set('load:start');
     var features = this.model.get('features');
 
     var deferred = $.Deferred();
@@ -118,11 +122,13 @@ function(Backbone, _, _s, FiltersUtil, RequestsUtil, FeatureModel){
 
         features.add(featureModel);
       });
+      this.model.set('load:end');
       deferred.resolve();
     }, this));
 
     queryDeferred.fail(function(){
       console.log('fail');
+      this.model.set('load:end');
       deferred.reject(arguments);
     });
 
