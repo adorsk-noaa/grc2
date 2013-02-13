@@ -77,7 +77,6 @@ function($, Backbone, _, FormatUtil, MapEditorView, LayersUtil){
   };
 
   actionHandlers.mapEditor_zoomToLayerDataExtent = function(ctx, opts){
-    console.log('here');
     var mapView = ctx.mapEditor.mapView;
     var layerView = mapView.layerRegistry[opts.layerId];
     if (layerView){
